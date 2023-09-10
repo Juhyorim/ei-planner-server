@@ -49,16 +49,18 @@ public class Task {
     @JoinColumn(name="next_task_id") //@TODO BuilderDefault 적요앙ㄴ해도 되는지 확인
     private Task next = null;
 
-    private Boolean isFirstPosition; //@TODO 삭제할 때 꼭 고려
+    @OneToOne
+    @JoinColumn(name="prev_task_id") //@TODO BuilderDefault 적요앙ㄴ해도 되는지 확인
+    private Task prev = null; //@TODO 삭제할 때 꼭 고려
 
     @Builder
-    public Task(Member member, String title, String description, LocalDate endDate, LocalTime endTime, Boolean isFirstPosition) {
+    public Task(Member member, String title, String description, LocalDate endDate, LocalTime endTime, Task prev) {
         this.member = member;
         this.title = title;
         this.description = description;
         this.endDate = endDate;
         this.endTime = endTime;
-        this.isFirstPosition = isFirstPosition;
+        this.prev = prev;
     }
 
     public void setNextTask(Task task) {

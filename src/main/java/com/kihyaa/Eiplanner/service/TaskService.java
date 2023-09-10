@@ -28,37 +28,27 @@ public class TaskService {
     Member member = memberRepository.findById(request.getUser_pk())
         .orElseThrow(() -> new NoSuchElementException("해당하는 멤버가 없습니다"));
 
-    List<Task> taskList = taskRepository.findByMemberAndEiType(member, EIType.PENDING);
+    //EIType이 PENDING이고, Next가 null인 (마지막) 거 가져옴
+    List<Task> taskList = taskRepository.findByMemberAndEiTypeAndNext(member, EIType.PENDING, null);
 
-    boolean isFirstPosition;
-    Task last = null;
+    Task prev = null;
 
-    if (taskList.size() == 0) {
-      isFirstPosition = true;
-    } else {
-      isFirstPosition = false;
-
-      //next가 null인 애 찾기
-      for (Task task: taskList) {
-        if (task.getNext() == null) {
-          last = task;
-          break;
-        }
-      }
-    }
+    //첫 번째가 아니라면
+    if (taskList.size() != 0)
+      prev = taskList.get(0);
 
     Task task = Task.builder()
       .member(member)
       .title(request.getTitle())
       .description(request.getDescription())
-      .endDate(request.getEnd_date())
-      .endTime(LocalTime.parse(request.getEnd_time()))
-      .isFirstPosition(isFirstPosition)
+      .endDate((request.getEnd_date() != null) ? request.getEnd_date(): null)
+      .endTime((request.getEnd_time() != null) ? LocalTime.parse(request.getEnd_time()): null)
+      .prev(prev)
       .build();
 
     //이전꺼에 연결
-    if (last != null)
-      last.setNextTask(task);
+    if (prev != null)
+      prev.setNextTask(task);
 
     taskRepository.save(task);
   }
