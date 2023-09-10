@@ -2,7 +2,9 @@ package com.kihyaa.Eiplanner.domain;
 
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter @Setter
