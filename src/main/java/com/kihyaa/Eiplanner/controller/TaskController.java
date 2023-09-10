@@ -1,17 +1,15 @@
 package com.kihyaa.Eiplanner.controller;
 
 import com.kihyaa.Eiplanner.dto.MakeTaskRequest;
+import com.kihyaa.Eiplanner.dto.TaskMoveRequest;
 import com.kihyaa.Eiplanner.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/task")
+@RequestMapping("/api/v1/tasks")
 @RestController
 public class TaskController {
 
@@ -29,7 +27,19 @@ public class TaskController {
 
     return ResponseEntity.ok().build();
   }
-  
-  //일정 전체조회
 
+  //일정 타입, 위치 옮기기
+  @PutMapping("/{task_id}/move")
+  public ResponseEntity moveTask(@PathVariable("task_id")Long taskId, @RequestBody TaskMoveRequest taskList) {
+    taskService.move(taskId, taskList);
+
+    return ResponseEntity.ok().build();
+  }
+
+
+  //일정 삭제
+//  @DeleteMapping("/")
+
+  //일정 전체조회
+  //일정 글 수정
 }

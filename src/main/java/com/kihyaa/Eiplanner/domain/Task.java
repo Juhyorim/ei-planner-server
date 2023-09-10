@@ -9,7 +9,6 @@ import java.time.LocalTime;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Task {
@@ -45,11 +44,11 @@ public class Task {
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime completedAt = null;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="next_task_id") //@TODO BuilderDefault 적요앙ㄴ해도 되는지 확인
     private Task next = null;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="prev_task_id") //@TODO BuilderDefault 적요앙ㄴ해도 되는지 확인
     private Task prev = null; //@TODO 삭제할 때 꼭 고려
 
@@ -65,5 +64,13 @@ public class Task {
 
     public void setNextTask(Task task) {
         this.next = task;
+    }
+
+    public void setPrevTask(Task task) {
+        this.prev = task;
+    }
+
+    public void setEiType(EIType eiType) {
+        this.eiType = eiType;
     }
 }
