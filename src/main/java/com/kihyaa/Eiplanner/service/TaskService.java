@@ -3,8 +3,7 @@ package com.kihyaa.Eiplanner.service;
 import com.kihyaa.Eiplanner.domain.EIType;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Task;
-import com.kihyaa.Eiplanner.dto.MakeTaskRequest;
-import com.kihyaa.Eiplanner.dto.TaskMoveRequest;
+import com.kihyaa.Eiplanner.dto.*;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
 import com.kihyaa.Eiplanner.repository.TaskRepository;
 import jakarta.persistence.EntityManager;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -59,8 +59,107 @@ public class TaskService {
     return task.getId();
   }
 
-  public void getAllTask() {
+  public DashBoardResponse getAllTask() {
+    Member member = memberRepository.findById(1L)
+      .orElseThrow(() -> new NoSuchElementException());
 
+    List<Task> taskList = taskRepository.findByMemberOrderByEiType(member);
+
+    List<Task> listPENDING = new ArrayList<>();
+    List<Task> listIMPORTANT_URGENT = new ArrayList<>();
+    List<Task> listIMPORTANT_NOT_URGENT = new ArrayList<>();
+    List<Task> listNOT_IMPORTANT_URGENT = new ArrayList<>();
+    List<Task> listNOT_IMPORTANT_NOT_URGENT = new ArrayList<>();
+
+    int i =0;
+    while(i < taskList.size()) {
+      while (taskList.get(i).getEiType() != EIType.PENDING) {
+        listPENDING.add(taskList.get(i));
+        i++;
+      }
+      while (i < taskList.size() && taskList.get(i).getEiType() != EIType.IMPORTANT_URGENT) {
+        listIMPORTANT_URGENT.add(taskList.get(i));
+        i++;
+      }
+
+      while (i < taskList.size() && taskList.get(i).getEiType() != EIType.IMPORTANT_NOT_URGENT) {
+        listIMPORTANT_NOT_URGENT.add(taskList.get(i));
+        i++;
+      }
+
+      while (i < taskList.size() && taskList.get(i).getEiType() != EIType.NOT_IMPORTANT_URGENT){
+        listNOT_IMPORTANT_URGENT.add(taskList.get(i));
+        i++;
+      }
+
+      while (i < taskList.size() && taskList.get(i).getEiType() != EIType.NOT_IMPORTANT_NOT_URGENT) {
+        listNOT_IMPORTANT_NOT_URGENT.add(taskList.get(i));
+        i++;
+      }
+    }
+
+    List<Task> sortedListPENDING = sortTask(listPENDING);
+    List<Task> sortedListIMPORTANT_URGENT = sortTask(listIMPORTANT_URGENT);
+    List<Task> sortedListIMPORTANT_NOT_URGENT = sortTask(listIMPORTANT_NOT_URGENT);
+    List<Task> sortedListNOT_IMPORTANT_URGENT = sortTask(listNOT_IMPORTANT_URGENT);
+    List<Task> sortedListNOT_IMPORTANT_NOT_URGENT = sortTask(listNOT_IMPORTANT_NOT_URGENT);
+
+
+    return DashBoardResponse.builder()
+      .pending(
+        TaskListResponse.builder()
+          .count(sortedListPENDING.size())
+          .tasks(TaskResponse.convert(sortedListPENDING))
+          .build()
+      )
+      .important_urgent(
+        TaskListResponse.builder()
+          .count(sortedListIMPORTANT_URGENT.size())
+          .tasks(TaskResponse.convert(sortedListIMPORTANT_URGENT))
+          .build()
+      )
+      .important_not_urgent(
+        TaskListResponse.builder()
+          .count(sortedListIMPORTANT_NOT_URGENT.size())
+          .tasks(TaskResponse.convert(sortedListIMPORTANT_NOT_URGENT))
+          .build()
+      )
+      .not_important_urgent(
+        TaskListResponse.builder()
+          .count(sortedListNOT_IMPORTANT_URGENT.size())
+          .tasks(TaskResponse.convert(sortedListNOT_IMPORTANT_URGENT))
+          .build()
+      )
+      .not_important_not_urgent(
+        TaskListResponse.builder()
+          .count(sortedListNOT_IMPORTANT_NOT_URGENT.size())
+          .tasks(TaskResponse.convert(sortedListNOT_IMPORTANT_NOT_URGENT))
+          .build()
+      )
+      .build();
+  }
+
+  private List<Task> sortTask(List<Task> list) {
+    List<Task> sortedList = new ArrayList<>();
+    Task current = null;
+
+    for (Task task: list) {
+      if (task.getPrev() == null) {
+        sortedList.add(task);
+        current = task;
+        break;
+      }
+    }
+
+    if (current == null)
+      return new ArrayList<>();
+
+    while (sortedList.size() != list.size()) {
+      current = current.getNext();
+      sortedList.add(current);
+    }
+
+    return sortedList;
   }
 
   @Transactional

@@ -1,5 +1,6 @@
 package com.kihyaa.Eiplanner.controller;
 
+import com.kihyaa.Eiplanner.dto.DashBoardResponse;
 import com.kihyaa.Eiplanner.dto.MakeTaskRequest;
 import com.kihyaa.Eiplanner.dto.TaskMoveRequest;
 import com.kihyaa.Eiplanner.service.TaskService;
@@ -38,8 +39,16 @@ public class TaskController {
 
 
   //일정 삭제
-//  @DeleteMapping("/")
+  @DeleteMapping("/{task_id}")
+  public ResponseEntity deleteTask(@PathVariable("task_id") Long taskId) {
+    return ResponseEntity.ok().build();
+  }
 
   //일정 전체조회
+  @GetMapping("/")
+  public ResponseEntity getAllTasks() {
+    DashBoardResponse response = taskService.getAllTask();
+    return ResponseEntity.ok(response);
+  }
   //일정 글 수정
 }
