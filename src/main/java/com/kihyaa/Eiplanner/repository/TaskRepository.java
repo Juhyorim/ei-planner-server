@@ -5,6 +5,7 @@ import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,5 +28,5 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
           "AND (t.ei_type = 'IMPORTANT_NOT_URGENT' OR t.ei_type = 'NOT_IMPORTANT_NOT_URGENT') " +
           "AND t.is_completed = false ",
           nativeQuery = true)
-  List<Task> findNotUrgencyTask(LocalDateTime now);
+  List<Task> findNotUrgencyTask(@Param("localDateTime") LocalDateTime localDateTime);
 }
