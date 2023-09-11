@@ -64,12 +64,12 @@ public class TaskServiceTest {
   @Order(1)
   @Test
   void makeTask() {
-    MakeTaskRequest makeTaskRequest = new MakeTaskRequest(member.getId(), title, description, null, null);
-    MakeTaskRequest makeTaskRequest2 = new MakeTaskRequest(member.getId(), title, description, null, null);
-    MakeTaskRequest makeTaskRequest3 = new MakeTaskRequest(member.getId(), title, description, null, null);
-    Long taskId = taskService.makeTask(makeTaskRequest);
-    Long taskId2 = taskService.makeTask(makeTaskRequest2);
-    Long taskId3 = taskService.makeTask(makeTaskRequest3);
+    MakeTaskRequest makeTaskRequest = new MakeTaskRequest(title, description, null, null);
+    MakeTaskRequest makeTaskRequest2 = new MakeTaskRequest(title, description, null, null);
+    MakeTaskRequest makeTaskRequest3 = new MakeTaskRequest(title, description, null, null);
+    Long taskId = taskService.makeTask(makeTaskRequest, member);
+    Long taskId2 = taskService.makeTask(makeTaskRequest2, member);
+    Long taskId3 = taskService.makeTask(makeTaskRequest3, member);
 
     Task task = taskRepository.findById(taskId).orElseThrow(() -> new NoSuchElementException());
 
