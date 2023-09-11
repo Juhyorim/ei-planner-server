@@ -1,6 +1,6 @@
 package com.kihyaa.Eiplanner.security.custom;
 
-import com.kihyaa.Eiplanner.Exception.JwtAuthenticationException;
+import com.kihyaa.Eiplanner.exception.exceptions.JwtAuthenticationException;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
 import com.kihyaa.Eiplanner.security.wrapper.MemberWrapper;
 import lombok.RequiredArgsConstructor;

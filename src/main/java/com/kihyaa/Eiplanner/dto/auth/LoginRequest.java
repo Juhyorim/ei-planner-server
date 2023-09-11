@@ -1,4 +1,10 @@
 package com.kihyaa.Eiplanner.dto.auth;
 
-public record LoginRequest(String email, String password) {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+public record LoginRequest(
+        @Schema(example = "test@gmail.com")
+        String email,
+        @Schema(example = "testpassword")
+        String password) {
 }

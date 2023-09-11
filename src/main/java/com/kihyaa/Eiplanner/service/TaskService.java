@@ -1,7 +1,7 @@
 package com.kihyaa.Eiplanner.service;
 
-import com.kihyaa.Eiplanner.Exception.ForbiddenException;
-import com.kihyaa.Eiplanner.Exception.NotFoundException;
+import com.kihyaa.Eiplanner.exception.exceptions.ForbiddenException;
+import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.domain.EIType;
 import com.kihyaa.Eiplanner.domain.History;
 import com.kihyaa.Eiplanner.domain.Member;

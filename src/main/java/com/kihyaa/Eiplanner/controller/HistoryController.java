@@ -2,6 +2,7 @@ package com.kihyaa.Eiplanner.controller;
 
 import com.kihyaa.Eiplanner.annotation.CurrentMember;
 import com.kihyaa.Eiplanner.domain.Member;
+import com.kihyaa.Eiplanner.exception.MessageCode;
 import com.kihyaa.Eiplanner.dto.response.ApiResponse;
 import com.kihyaa.Eiplanner.dto.response.GetHistoryResponse;
 import com.kihyaa.Eiplanner.service.HistoryService;
@@ -12,8 +13,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/v1/history")
@@ -35,7 +34,7 @@ public class HistoryController {
 
         historyService.deleteOneHistory(taskId, member.getId());
 
-        return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), LocalDateTime.now(), "히스토리 내 일정 삭제 성공"));
+        return ApiResponse.createResponse(MessageCode.SUCCESS_DELETE_RESOURCE, HttpStatus.OK);
     }
 
     @DeleteMapping("/clean")
@@ -43,9 +42,6 @@ public class HistoryController {
 
         historyService.deleteAllHistory(member.getId());
 
-        return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), LocalDateTime.now(), "히스토리 비우기 성공"));
+        return ApiResponse.createResponse(MessageCode.SUCCESS_DELETE_RESOURCE, HttpStatus.OK);
     }
-
-
-
 }

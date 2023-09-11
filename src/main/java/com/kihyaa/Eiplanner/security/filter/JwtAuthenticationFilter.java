@@ -1,6 +1,6 @@
 package com.kihyaa.Eiplanner.security.filter;
 
-import com.kihyaa.Eiplanner.Exception.JwtAuthenticationException;
+import com.kihyaa.Eiplanner.exception.exceptions.JwtAuthenticationException;
 import com.kihyaa.Eiplanner.security.custom.CustomUserDetailsService;
 import com.kihyaa.Eiplanner.security.utils.JwtProvider;
 import jakarta.servlet.FilterChain;

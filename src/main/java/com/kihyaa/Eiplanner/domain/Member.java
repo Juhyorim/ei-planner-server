@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Getter @Setter
+@Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,7 +15,7 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "setting_id")
     private Setting setting;
 
@@ -23,5 +23,13 @@ public class Member {
     private String email;
     private String password;
     private String profileImgUrl;
+
+    public void changeNickname(String newNickname) {
+        this.nickname = newNickname;
+    }
+
+    public void changeProfileImgUrl(String profileImgUrl) {
+        this.profileImgUrl = profileImgUrl;
+    }
 }
 
