@@ -19,7 +19,7 @@ public class TaskResponse {
   private String title;
   private String description;
   private LocalDateTime end_at;
-  private boolean isTimeInclude;
+  private Boolean isTimeInclude;
 
   public static List<TaskResponse> convert(List<Task> taskList) {
     List<TaskResponse> responses = new ArrayList<>();

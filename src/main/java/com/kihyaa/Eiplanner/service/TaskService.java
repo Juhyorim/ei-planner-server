@@ -43,17 +43,17 @@ public class TaskService {
 
     LocalDateTime dateTime = request.getEnd_at();
     //time이 포함되지 않았다면 그냥 저장
-    if (dateTime != null && !request.isTimeInclude())
+    if (dateTime != null && !request.getIsTimeInclude())
       dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
 
-    log.info("@@: " + request.isTimeInclude());
+    log.info("@@: " + request.getIsTimeInclude());
 
     Task task = Task.builder()
       .member(member)
       .title(request.getTitle())
       .description((request.getDescription() != null)? request.getDescription() : null)
       .endAt((dateTime != null) ? dateTime: null)
-      .isTimeInclude(request.isTimeInclude())
+      .isTimeInclude(request.getIsTimeInclude())
       .prev(prev)
       .build();
 
