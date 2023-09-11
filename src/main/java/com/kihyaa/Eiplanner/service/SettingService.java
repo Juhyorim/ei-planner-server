@@ -1,5 +1,6 @@
 package com.kihyaa.Eiplanner.service;
 
+import com.kihyaa.Eiplanner.Exception.NotFoundException;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Setting;
 import com.kihyaa.Eiplanner.dto.response.GetSettingResponse;
@@ -20,29 +21,25 @@ public class SettingService {
 
     @Transactional
     public boolean setDisplayDateTime(Boolean isView, Long memberId) {
-        Member member = memberRepository.findById(memberId).orElseThrow(() -> new NoSuchElementException("해당 멤버가 존재하지 않습니다."));
+        Member member = getMemberOrElseThrow(memberId);
         member.getSetting().setIsViewDateTime(isView);
         return true;
     }
 
     @Transactional
     public boolean setAutoUrgent(int auto_urgent_day, Long memberId) {
-        Member member = memberRepository.findById(memberId).orElseThrow(() -> new NoSuchElementException("해당 멤버가 존재하지 않습니다."));
+        Member member = getMemberOrElseThrow(memberId);
         member.getSetting().setAutoEmergencySwitch(auto_urgent_day);
         return true;
     }
 
     public GetSettingResponse getSettingDetail(Long memberId) {
-        validateMemberExists(memberId);
-        Member member = memberRepository.findById(memberId).orElseThrow(() -> new NoSuchElementException("해당 멤버가 존재하지 않습니다."));
+        Member member = getMemberOrElseThrow(memberId);
         Setting setting = member.getSetting();
         return GetSettingResponse.of(setting.getAutoEmergencySwitch(), setting.getIsViewDateTime());
     }
 
-    private void validateMemberExists(Long memberId) {
-        // Todo : 해당 memberId가 본인 Id　인지 검증 하는 코드 추가
-
-        memberRepository.findById(memberId).orElseThrow(() -> new NoSuchElementException("해당 멤버가 존재하지 않습니다."));
-
+    private Member getMemberOrElseThrow(Long memberId) {
+        return  memberRepository.findById(memberId).orElseThrow(() -> new NotFoundException("해당 멤버가 존재하지 않습니다."));
     }
 }
