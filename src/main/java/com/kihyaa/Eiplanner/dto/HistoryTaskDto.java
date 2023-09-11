@@ -1,7 +1,6 @@
 package com.kihyaa.Eiplanner.dto;
 
 import com.kihyaa.Eiplanner.domain.Task;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +13,6 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class HistoryTaskDto {
-    @NotNull
     private Long id;
     private String title;
     private String description;

@@ -26,30 +26,24 @@ public class HistoryController {
     public ResponseEntity<GetHistoryResponse> getHistory(@CurrentMember Member member,
                                                         @PageableDefault (page=0, size=5) @Parameter(hidden = true) Pageable pageable){
 
-        GetHistoryResponse historyList = historyService.getHistory(member.getId(), pageable);
-
-        return ResponseEntity.ok(historyList);
+        return ResponseEntity.ok(historyService.getHistory(member.getId(), pageable));
     }
 
     @DeleteMapping("/{task_id}")
     public ResponseEntity<ApiResponse> deleteOneHistory(@PathVariable(value = "task_id") Long taskId,
                                                         @CurrentMember Member member){
-        boolean result = historyService.deleteOneHistory(taskId, member.getId());
 
-        ApiResponse response = new ApiResponse(HttpStatus.OK.value(), LocalDateTime.now(), "히스토리 내 일정 삭제 성공");
+        historyService.deleteOneHistory(taskId, member.getId());
 
-        // Todo : 실패시 상태코드 400 날려야 하는데 Service 단에서 에러 터지게 해놨음. 그거 캐치해서 상태코드 넘겨줘야할듯
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), LocalDateTime.now(), "히스토리 내 일정 삭제 성공"));
     }
 
     @DeleteMapping("/clean")
     public ResponseEntity<ApiResponse> deleteAllHistory(@CurrentMember Member member){
-        boolean result = historyService.deleteAllHistory(member.getId());
 
-        ApiResponse response = new ApiResponse(HttpStatus.OK.value(), LocalDateTime.now(), "히스토리 비우기 성공");
+        historyService.deleteAllHistory(member.getId());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), LocalDateTime.now(), "히스토리 비우기 성공"));
     }
 
 
