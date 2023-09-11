@@ -44,7 +44,7 @@ public class HistoryService {
             throw new NotFoundException("요청한 히스토리가 존재하지 않습니다."); // TODO : 에러 메세지 커스텀 하면 에러 코드 바꾸기
         }
 
-        if(historyOpt.get().getMember().getId().equals(memberId)){
+        if(!historyOpt.get().getMember().getId().equals(memberId)){
             throw new NotFoundException("본인 히스토리만 삭제할 수 있습니다."); // TODO : 에러 메세지 커스텀 하면 에러 코드 바꾸기
         }
 

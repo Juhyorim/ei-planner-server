@@ -1,11 +1,11 @@
 package com.kihyaa.Eiplanner.controller;
 
-import com.kihyaa.Eiplanner.dto.request.DeleteHistoryRequest;
-import com.kihyaa.Eiplanner.dto.request.GetHistoryRequest;
+import com.kihyaa.Eiplanner.annotation.CurrentMember;
+import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.dto.response.ApiResponse;
 import com.kihyaa.Eiplanner.dto.response.GetHistoryResponse;
 import com.kihyaa.Eiplanner.service.HistoryService;
-import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -23,18 +23,18 @@ public class HistoryController {
     private final HistoryService historyService;
 
     @GetMapping
-    public ResponseEntity<GetHistoryResponse> getHistory(@RequestBody @Valid GetHistoryRequest request,
-                                                        @PageableDefault(page=0, size=5) Pageable pageable){
+    public ResponseEntity<GetHistoryResponse> getHistory(@CurrentMember Member member,
+                                                        @PageableDefault (page=0, size=5) @Parameter(hidden = true) Pageable pageable){
 
-        GetHistoryResponse historyList = historyService.getHistory(request.getUser_pk(), pageable);
+        GetHistoryResponse historyList = historyService.getHistory(member.getId(), pageable);
 
         return ResponseEntity.ok(historyList);
     }
 
     @DeleteMapping("/{task_id}")
     public ResponseEntity<ApiResponse> deleteOneHistory(@PathVariable(value = "task_id") Long taskId,
-                                                        @RequestBody @Valid DeleteHistoryRequest request){
-        boolean result = historyService.deleteOneHistory(taskId, request.getUser_pk());
+                                                        @CurrentMember Member member){
+        boolean result = historyService.deleteOneHistory(taskId, member.getId());
 
         ApiResponse response = new ApiResponse(HttpStatus.OK.value(), LocalDateTime.now(), "히스토리 내 일정 삭제 성공");
 
@@ -44,8 +44,8 @@ public class HistoryController {
     }
 
     @DeleteMapping("/clean")
-    public ResponseEntity<ApiResponse> deleteAllHistory(@RequestBody @Valid DeleteHistoryRequest request){
-        boolean result = historyService.deleteAllHistory(request.getUser_pk());
+    public ResponseEntity<ApiResponse> deleteAllHistory(@CurrentMember Member member){
+        boolean result = historyService.deleteAllHistory(member.getId());
 
         ApiResponse response = new ApiResponse(HttpStatus.OK.value(), LocalDateTime.now(), "히스토리 비우기 성공");
 

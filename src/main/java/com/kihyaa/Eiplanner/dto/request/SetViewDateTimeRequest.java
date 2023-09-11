@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SetViewDateTimeRequest {
     @NotNull
-    private Long user_pk;
-
-    @NotNull
     private Boolean display_date_time;
 
 }
