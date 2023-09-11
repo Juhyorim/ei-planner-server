@@ -50,6 +50,8 @@ public class Task {
     @JoinColumn(name="prev_task_id") //@TODO BuilderDefault 적요앙ㄴ해도 되는지 확인
     private Task prev = null; //@TODO 삭제할 때 꼭 고려
 
+    private Boolean isHistory = false;
+
     @Builder
     public Task(Member member, String title, String description, LocalDateTime endAt, boolean isTimeInclude, Task prev) {
         this.member = member;
@@ -81,5 +83,14 @@ public class Task {
 
     public void check(boolean checked) {
         this.isCompleted = checked;
+        if (checked)
+            this.completedAt = LocalDateTime.now();
+        else
+            this.completedAt = null;
+
+    }
+
+    public void sendHistory() {
+        this.isHistory = true;
     }
 }
