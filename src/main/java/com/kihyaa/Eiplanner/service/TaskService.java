@@ -17,10 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -316,5 +313,26 @@ public class TaskService {
         next.setPrevTask(prev);
     }
 
+  }
+
+  @Transactional
+  public void scheduleTaskTypeRotation(){
+
+    List<Task> taskNotUrgencyTasks = taskRepository.findNotUrgencyTask(LocalDateTime.now());
+
+    for(Task task : taskNotUrgencyTasks){
+      editToUrgentEiType(task);
+    }
+  }
+
+  private void editToUrgentEiType(Task task) {
+    Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
+    urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
+    urgencyRotationMap.put(EIType.NOT_IMPORTANT_NOT_URGENT, EIType.NOT_IMPORTANT_URGENT);
+
+    EIType newEiType = urgencyRotationMap.get(task.getEiType());
+    if (newEiType != null) {
+      task.setEiType(newEiType);
+    }
   }
 }
