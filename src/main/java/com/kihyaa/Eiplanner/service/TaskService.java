@@ -43,7 +43,7 @@ public class TaskService {
     if (taskList.size() != 0)
       prev = taskList.get(0);
 
-    LocalDateTime dateTime = request.getEnd_at();
+    LocalDateTime dateTime = request.getEndAt();
     //time이 포함되지 않았다면 그냥 저장
     if (dateTime != null && !request.getIsTimeInclude())
       dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
@@ -55,7 +55,7 @@ public class TaskService {
       .title(request.getTitle())
       .description((request.getDescription() != null)? request.getDescription() : null)
       .endAt((dateTime != null) ? dateTime: null)
-      .isTimeInclude(request.getIsTimeInclude())
+      .isTimeInclude((dateTime != null)? request.getIsTimeInclude(): false)
       .prev(prev)
       .build();
 
@@ -260,7 +260,7 @@ public class TaskService {
     if (dateTime != null && !request.is_time_include())
       dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
 
-    task.edit(request.getTitle(), request.getDescription(), dateTime, request.is_time_include());
+    task.edit(request.getTitle(), request.getDescription(), dateTime, (dateTime != null)? request.is_time_include(): null);
   }
 
   @Transactional(readOnly = true)
@@ -276,7 +276,7 @@ public class TaskService {
       .id(taskId)
       .title(task.getTitle())
       .description(task.getDescription())
-      .end_at(task.getEndAt())
+      .endAt(task.getEndAt())
       .isTimeInclude(task.getIsTimeInclude())
       .build();
 
