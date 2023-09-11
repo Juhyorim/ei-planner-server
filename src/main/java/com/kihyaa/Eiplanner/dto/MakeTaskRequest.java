@@ -18,7 +18,10 @@ public class MakeTaskRequest {
   @NotNull
   private String title;
   private String description;
-  private LocalDateTime end_at;
 
+  @JsonProperty("end_at")
+  private LocalDateTime endAt;
+
+  @JsonProperty("is_time_include")
   private Boolean isTimeInclude;
 }

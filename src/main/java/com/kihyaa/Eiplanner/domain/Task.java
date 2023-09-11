@@ -22,6 +22,7 @@ public class Task {
     private String title;
 
     @Lob
+    @Column(length = 500)
     private String description;
 
     @Column(columnDefinition = "TIMESTAMP")
