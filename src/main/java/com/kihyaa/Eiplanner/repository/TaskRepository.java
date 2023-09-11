@@ -10,4 +10,5 @@ import java.util.List;
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
   List<Task> findByMemberAndEiTypeAndNext(Member member, EIType eiType, Task task);
+  List<Task> findByMemberOrderByEiType(Member member);
 }

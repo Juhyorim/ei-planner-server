@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class MakeTaskRequest {
   @NotNull
-  private Long user_pk;
+  private Long member_id;
 
   @Schema(example = "일정제목")
   @NotNull
