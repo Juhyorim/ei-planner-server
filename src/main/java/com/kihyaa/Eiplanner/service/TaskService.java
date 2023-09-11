@@ -280,4 +280,11 @@ public class TaskService {
       .build();
 
   }
+
+  public void editCheck(Long taskId, TaskCheckDto dto) {
+    Task task = taskRepository.findById(taskId)
+      .orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없습니다"));
+
+    task.check(dto.is_checked());
+  }
 }

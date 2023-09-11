@@ -81,4 +81,8 @@ public class Task {
         this.endDate = endDate;
         this.endTime = LocalTime.parse(endTime);
     }
+
+    public void check(boolean checked) {
+        this.isCompleted = checked;
+    }
 }

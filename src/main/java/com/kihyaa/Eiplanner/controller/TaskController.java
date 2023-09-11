@@ -78,4 +78,12 @@ public class TaskController {
 
     return ResponseEntity.ok(info);
   }
+
+  //일정 완료 체크, 체크취소
+  @PutMapping("/{task_id}/checked")
+  public ResponseEntity completeCheck(@PathVariable("task_id")Long taskId, TaskCheckDto dto) {
+    taskService.editCheck(taskId, dto);
+
+    return ResponseEntity.ok().build();
+  }
 }
