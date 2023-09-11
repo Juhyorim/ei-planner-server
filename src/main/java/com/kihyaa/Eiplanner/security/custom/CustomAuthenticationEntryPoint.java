@@ -28,7 +28,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-        ErrorDTO errorDto = new ErrorDTO("인증되지 않은 요청입니다!", "현재 요청에 인증헤더가 포함되어있지 않습니다!");
+        String errorMessage = authException.getMessage();
+        ErrorDTO errorDto = new ErrorDTO("인증되지 않은 요청입니다!", errorMessage);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

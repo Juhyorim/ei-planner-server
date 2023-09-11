@@ -1,17 +1,24 @@
 package com.kihyaa.Eiplanner.service;
 
-import com.kihyaa.Eiplanner.Exception.NotFoundException;
 import com.kihyaa.Eiplanner.domain.Member;
+import com.kihyaa.Eiplanner.domain.Setting;
 import com.kihyaa.Eiplanner.dto.auth.LoginRequest;
 import com.kihyaa.Eiplanner.dto.auth.LoginResponse;
 import com.kihyaa.Eiplanner.dto.auth.RegisterRequest;
+import com.kihyaa.Eiplanner.exception.MessageCode;
+import com.kihyaa.Eiplanner.exception.exceptions.ConflictException;
+import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
 import com.kihyaa.Eiplanner.security.utils.JwtProvider;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.kihyaa.Eiplanner.exception.MessageCode.CONFLICT_EMAIL;
+import static com.kihyaa.Eiplanner.exception.MessageCode.CONFLICT_NICKNAME;
 
 @Slf4j
 @Service
@@ -24,8 +31,31 @@ public class AuthService {
 
     // 회원 가입
     public void register(RegisterRequest registerRequest) {
-        Member member = buildMember(registerRequest);
+        validateRegisterRequest(registerRequest);
+
+        Setting setting = buildSetting();
+        Member member = buildMember(registerRequest, setting);
+
         memberRepository.save(member);
+    }
+
+    private Setting buildSetting() {
+        return Setting.builder()
+                .isViewDateTime(true)
+                .autoEmergencySwitch(3)
+                .build();
+    }
+
+    private void validateRegisterRequest(RegisterRequest request) {
+        // 이메일 중복 검사
+        if (memberRepository.existsByEmail(request.email())) {
+            throw new ConflictException(CONFLICT_EMAIL);
+        }
+
+        // 닉네임 중복 검사
+        if (memberRepository.existsByNickname(request.nickname())) {
+            throw new ConflictException(CONFLICT_NICKNAME);
+        }
     }
 
     // 로그인
@@ -35,7 +65,7 @@ public class AuthService {
     }
 
     // Member 객체 생성
-    private Member buildMember(RegisterRequest registerRequest) {
+    private Member buildMember(RegisterRequest registerRequest, Setting setting) {
         String encodedPassword = passwordEncoder.encode(registerRequest.password());
 
         return Member.builder()
@@ -43,6 +73,7 @@ public class AuthService {
                 .nickname(registerRequest.nickname())
                 .profileImgUrl("default.jpg")
                 .password(encodedPassword)
+                .setting(setting)
                 .build();
     }
 
@@ -50,7 +81,7 @@ public class AuthService {
     private Member findValidMember(LoginRequest loginRequest) {
         return memberRepository.findByEmail(loginRequest.email())
                 .filter(member -> passwordEncoder.matches(loginRequest.password(), member.getPassword()))
-                .orElseThrow(() -> new RuntimeException("가입되지 않은 이메일이거나 잘못된 비밀번호입니다."));
+                .orElseThrow(() -> new NotFoundException(MessageCode.NOT_FOUND));
     }
 
     // 로그인 응답 생성
@@ -59,7 +90,15 @@ public class AuthService {
 
         return LoginResponse.builder()
                 .token(token)
+                .nickname(member.getNickname())
+                .profileImageUrl(member.getProfileImgUrl())
+                .email(member.getEmail())
                 .build();
+    }
+
+    //회원 탈퇴
+    public void delete(Member member) {
+        memberRepository.delete(member);
     }
 }
 

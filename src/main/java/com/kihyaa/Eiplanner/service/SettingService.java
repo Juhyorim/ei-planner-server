@@ -1,6 +1,6 @@
 package com.kihyaa.Eiplanner.service;
 
-import com.kihyaa.Eiplanner.Exception.NotFoundException;
+import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Setting;
 import com.kihyaa.Eiplanner.dto.response.GetSettingResponse;
@@ -9,8 +9,6 @@ import com.kihyaa.Eiplanner.repository.SettingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor

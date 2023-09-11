@@ -1,6 +1,6 @@
 package com.kihyaa.Eiplanner.security.utils;
 
-import com.kihyaa.Eiplanner.Exception.JwtAuthenticationException;
+import com.kihyaa.Eiplanner.exception.exceptions.JwtAuthenticationException;
 import com.kihyaa.Eiplanner.config.properties.JwtProperties;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;

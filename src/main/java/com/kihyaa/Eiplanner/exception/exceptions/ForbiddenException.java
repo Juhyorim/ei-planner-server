@@ -1,4 +1,4 @@
-package com.kihyaa.Eiplanner.Exception;
+package com.kihyaa.Eiplanner.exception.exceptions;
 
 public class ForbiddenException extends RuntimeException {
     public ForbiddenException(String message) {

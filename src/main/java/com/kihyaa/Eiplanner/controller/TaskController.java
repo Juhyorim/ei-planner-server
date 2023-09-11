@@ -4,13 +4,13 @@ import com.kihyaa.Eiplanner.annotation.CurrentMember;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.dto.*;
 import com.kihyaa.Eiplanner.dto.response.ApiResponse;
+import com.kihyaa.Eiplanner.exception.MessageCode;
 import com.kihyaa.Eiplanner.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/tasks")
@@ -21,10 +21,10 @@ public class TaskController {
 
   //일정 만들기
   @PostMapping
-  public ResponseEntity makeTask(@RequestBody @Valid MakeTaskRequest request, @CurrentMember Member member) {
+  public ResponseEntity<ApiResponse> makeTask(@RequestBody @Valid MakeTaskRequest request, @CurrentMember Member member) {
     taskService.makeTask(request, member);
 
-    return ResponseEntity.ok().build();
+    return ApiResponse.createResponse(MessageCode.SUCCESS_CREATE_RESOURCE, HttpStatus.CREATED);
   }
 
   //일정 타입, 위치 옮기기
@@ -32,7 +32,7 @@ public class TaskController {
   public ResponseEntity moveTask(@PathVariable("task_id")Long taskId, @RequestBody TaskMoveRequest taskList, @CurrentMember Member member) {
     taskService.move(taskId, taskList, member);
 
-    return ResponseEntity.ok().build();
+    return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
   }
 
   //일정 삭제
@@ -40,33 +40,27 @@ public class TaskController {
   public ResponseEntity deleteTask(@PathVariable("task_id") Long taskId, @CurrentMember Member member) {
     taskService.delete(taskId, member);
 
-    return ResponseEntity.ok().build();
+    return ApiResponse.createResponse(MessageCode.SUCCESS_DELETE_RESOURCE, HttpStatus.OK);
   }
 
   //일정 전체조회
   @GetMapping
-  public ResponseEntity getAllTasks(@CurrentMember Member member) {
+  public ResponseEntity<DashBoardResponse> getAllTasks(@CurrentMember Member member) {
     DashBoardResponse response = taskService.getAllTask(member);
     return ResponseEntity.ok(response);
   }
 
   //일정 내용 수정
   @PutMapping("/{task_id}")
-  public ResponseEntity editTask(@PathVariable("task_id")Long taskId, @RequestBody @Valid TaskEditRequest request, @CurrentMember Member member) {
+  public ResponseEntity<ApiResponse> editTask(@PathVariable("task_id")Long taskId, @RequestBody @Valid TaskEditRequest request, @CurrentMember Member member) {
     taskService.edit(taskId, request, member);
 
-    ApiResponse response = ApiResponse.builder()
-      .code(200)
-      .message("일정이 성공적으로 수정되었습니다")
-      .time_stamp(LocalDateTime.now())
-      .build();
-
-    return ResponseEntity.ok(response);
+    return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
   }
 
   //일정 상세보기
   @GetMapping("/{task_id}")
-  public ResponseEntity getTaskInfo(@PathVariable("task_id")Long taskId, @CurrentMember Member member) {
+  public ResponseEntity<TaskResponse> getTaskInfo(@PathVariable("task_id")Long taskId, @CurrentMember Member member) {
     TaskResponse info = taskService.getInfo(taskId, member);
 
     return ResponseEntity.ok(info);
@@ -74,17 +68,17 @@ public class TaskController {
 
   //일정 완료 체크, 체크취소
   @PutMapping("/{task_id}/checked")
-  public ResponseEntity completeCheck(@PathVariable("task_id")Long taskId, @RequestBody TaskCheckDto dto) {
+  public ResponseEntity<ApiResponse> completeCheck(@PathVariable("task_id")Long taskId, @RequestBody TaskCheckDto dto) {
     taskService.editCheck(taskId, dto);
 
-    return ResponseEntity.ok().build();
+    return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
   }
 
   //대시보드 완료 일정 정리
   @PutMapping("/tasks/clean")
-  public ResponseEntity cleanCompleteTasks(@CurrentMember Member member) {
+  public ResponseEntity<ApiResponse> cleanCompleteTasks(@CurrentMember Member member) {
     taskService.cleanCompleteTasks(member);
 
-    return ResponseEntity.ok().build();
+    return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
   }
 }
