@@ -24,4 +24,9 @@ public interface HistoryRepository extends JpaRepository<History, Long> {
             "ORDER BY h.task.completedAt DESC")
     Page<History> findCompletedTasksByMemberId(Long memberId, Pageable pageable);
 
+
+
+    void deleteByTaskId(Long taskId);
+
+    void deleteAllByMemberId(Long memberId);
 }
