@@ -20,6 +20,7 @@ public class TaskResponse {
   private String description;
   private LocalDateTime end_at;
   private Boolean isTimeInclude;
+  private Boolean isCompleted;
 
   public static List<TaskResponse> convert(List<Task> taskList) {
     List<TaskResponse> responses = new ArrayList<>();
@@ -31,6 +32,7 @@ public class TaskResponse {
           .description(task.getDescription())
           .end_at(task.getEndAt())
           .isTimeInclude(task.getIsTimeInclude())
+          .isCompleted(task.getIsCompleted())
           .build()
       );
     }

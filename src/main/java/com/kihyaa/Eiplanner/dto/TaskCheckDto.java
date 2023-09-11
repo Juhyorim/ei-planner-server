@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TaskCheckDto {
-  private boolean is_checked;
+  private Boolean is_checked;
 }
