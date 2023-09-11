@@ -2,13 +2,11 @@ package com.kihyaa.Eiplanner.controller;
 
 import com.kihyaa.Eiplanner.annotation.CurrentMember;
 import com.kihyaa.Eiplanner.domain.Member;
-import com.kihyaa.Eiplanner.dto.DashBoardResponse;
-import com.kihyaa.Eiplanner.dto.MakeTaskRequest;
-import com.kihyaa.Eiplanner.dto.TaskEditRequest;
-import com.kihyaa.Eiplanner.dto.TaskMoveRequest;
+import com.kihyaa.Eiplanner.dto.*;
 import com.kihyaa.Eiplanner.dto.response.ApiResponse;
 import com.kihyaa.Eiplanner.service.TaskService;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -71,5 +69,13 @@ public class TaskController {
       .build();
 
     return ResponseEntity.ok(response);
+  }
+
+  //일정 상세보기
+  @GetMapping("/{task_id}")
+  public ResponseEntity getTaskInfo(@PathVariable("task_id")Long taskId, @CurrentMember Member member) {
+    TaskResponse info = taskService.getInfo(taskId, member);
+
+    return ResponseEntity.ok(info);
   }
 }

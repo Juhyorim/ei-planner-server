@@ -25,5 +25,9 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDTO("데이터를 찾을 수 없습니다", e.getMessage()));
   }
 
-
+  @ExceptionHandler(ForbiddenException.class)
+  protected ResponseEntity handlerForbiddenException(ForbiddenException e) {
+    log.info("ForbiddenException = {}", e.getMessage());
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorDTO("권한이 없습니다", e.getMessage()));
+  }
 }

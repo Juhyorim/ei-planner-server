@@ -1,5 +1,6 @@
 package com.kihyaa.Eiplanner.service;
 
+import com.kihyaa.Eiplanner.Exception.ForbiddenException;
 import com.kihyaa.Eiplanner.Exception.NotFoundException;
 import com.kihyaa.Eiplanner.domain.EIType;
 import com.kihyaa.Eiplanner.domain.Member;
@@ -260,5 +261,23 @@ public class TaskService {
     String pattern = "^([01]\\d|2[0-3]):[0-5]\\d$";  //00:00 ~ 23:59 사이의 값인지 확인
 
     return Pattern.matches(pattern, time);
+  }
+
+  public TaskResponse getInfo(Long taskId, Member member) {
+    Task task = taskRepository.findById(taskId)
+      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+
+    if (task.getMember().getId() != member.getId()) {
+      throw new ForbiddenException("일정에 대한 조회 권한이 없습니다");
+    }
+
+    return TaskResponse.builder()
+      .id(taskId)
+      .title(task.getTitle())
+      .description(task.getDescription())
+      .end_date(task.getEndDate())
+      .end_time(task.getEndTime().toString().substring(0, 5))
+      .build();
+
   }
 }
