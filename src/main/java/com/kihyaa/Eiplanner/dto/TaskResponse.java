@@ -1,5 +1,6 @@
 package com.kihyaa.Eiplanner.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kihyaa.Eiplanner.domain.Task;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,8 +19,11 @@ public class TaskResponse {
   private Long id;
   private String title;
   private String description;
-  private LocalDateTime end_at;
+  @JsonProperty("end_at")
+  private LocalDateTime endAt;
+  @JsonProperty("is_time_include")
   private Boolean isTimeInclude;
+  @JsonProperty("is_completed")
   private Boolean isCompleted;
 
   public static List<TaskResponse> convert(List<Task> taskList) {
@@ -30,7 +34,7 @@ public class TaskResponse {
           .id(task.getId())
           .title(task.getTitle())
           .description(task.getDescription())
-          .end_at(task.getEndAt())
+          .endAt(task.getEndAt())
           .isTimeInclude(task.getIsTimeInclude())
           .isCompleted(task.getIsCompleted())
           .build()
