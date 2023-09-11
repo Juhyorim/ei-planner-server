@@ -3,6 +3,7 @@ package com.kihyaa.Eiplanner.repository;
 import com.kihyaa.Eiplanner.domain.EIType;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Task;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,7 +18,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
   List<Task> findByMemberAndIsCompletedIsTrue(Member member);
 
-
+//  List<Task> findByMemberAndIsHistoryIsTrueOrderByCompletedAt(Member member, Pageable pageable);
 
   @Query(value = "SELECT t.* " +
           "FROM task t " +

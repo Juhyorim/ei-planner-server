@@ -26,7 +26,7 @@ public class TaskResponse {
   @JsonProperty("is_completed")
   private Boolean isCompleted;
 
-  public static List<TaskResponse> convert(List<Task> taskList) {
+  public static List<TaskResponse> convert(List<Task> taskList, boolean isViewDateTime) {
     List<TaskResponse> responses = new ArrayList<>();
     for (Task task: taskList) {
       responses.add(
@@ -34,7 +34,7 @@ public class TaskResponse {
           .id(task.getId())
           .title(task.getTitle())
           .description(task.getDescription())
-          .endAt(task.getEndAt())
+          .endAt(isViewDateTime? task.getEndAt() : null)
           .isTimeInclude(task.getIsTimeInclude())
           .isCompleted(task.getIsCompleted())
           .build()

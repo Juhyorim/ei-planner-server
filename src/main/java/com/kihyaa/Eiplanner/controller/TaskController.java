@@ -52,8 +52,8 @@ public class TaskController {
 
   //일정 내용 수정
   @PutMapping("/{task_id}")
-  public ResponseEntity<ApiResponse> editTask(@PathVariable("task_id")Long taskId, @RequestBody @Valid TaskEditRequest request, @CurrentMember Member member) {
-    taskService.edit(taskId, request, member);
+  public ResponseEntity<ApiResponse> editTask(@PathVariable("task_id")Long taskId, @RequestBody @Valid TaskEditRequest request) {
+    taskService.edit(taskId, request);
 
     return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
   }
