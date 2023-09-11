@@ -41,6 +41,8 @@ public class TaskController {
   //일정 삭제
   @DeleteMapping("/{task_id}")
   public ResponseEntity deleteTask(@PathVariable("task_id") Long taskId) {
+    taskService.delete(taskId);
+
     return ResponseEntity.ok().build();
   }
 

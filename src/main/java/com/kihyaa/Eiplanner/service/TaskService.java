@@ -217,4 +217,20 @@ public class TaskService {
     findTask.setPrevTask(prev2);
     findTask.setNextTask(next2);
   }
+
+  @Transactional
+  public void delete(Long taskId) {
+    Task task = taskRepository.findById(taskId)
+      .orElseThrow(() -> new NoSuchElementException());
+
+    Task prev = task.getPrev();
+    Task next = task.getNext();
+
+    if (prev != null)
+      prev.setNextTask(next);
+    if (next != null)
+      next.setPrevTask(prev);
+
+    taskRepository.delete(task);
+  }
 }
