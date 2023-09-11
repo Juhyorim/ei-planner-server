@@ -6,7 +6,6 @@ import com.kihyaa.Eiplanner.dto.*;
 import com.kihyaa.Eiplanner.dto.response.ApiResponse;
 import com.kihyaa.Eiplanner.service.TaskService;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -75,8 +74,16 @@ public class TaskController {
 
   //일정 완료 체크, 체크취소
   @PutMapping("/{task_id}/checked")
-  public ResponseEntity completeCheck(@PathVariable("task_id")Long taskId, TaskCheckDto dto) {
+  public ResponseEntity completeCheck(@PathVariable("task_id")Long taskId, @RequestBody TaskCheckDto dto) {
     taskService.editCheck(taskId, dto);
+
+    return ResponseEntity.ok().build();
+  }
+
+  //대시보드 완료 일정 정리
+  @PutMapping("/tasks/clean")
+  public ResponseEntity cleanCompleteTasks(@CurrentMember Member member) {
+    taskService.cleanCompleteTasks(member);
 
     return ResponseEntity.ok().build();
   }

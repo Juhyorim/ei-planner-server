@@ -3,9 +3,11 @@ package com.kihyaa.Eiplanner.service;
 import com.kihyaa.Eiplanner.Exception.ForbiddenException;
 import com.kihyaa.Eiplanner.Exception.NotFoundException;
 import com.kihyaa.Eiplanner.domain.EIType;
+import com.kihyaa.Eiplanner.domain.History;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Task;
 import com.kihyaa.Eiplanner.dto.*;
+import com.kihyaa.Eiplanner.repository.HistoryRepository;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
 import com.kihyaa.Eiplanner.repository.TaskRepository;
 import jakarta.persistence.EntityManager;
@@ -22,15 +24,15 @@ import java.util.NoSuchElementException;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 @Service
 public class TaskService {
 
   private final TaskRepository taskRepository;
   private final MemberRepository memberRepository;
+  private final HistoryRepository historyRepository;
   private final EntityManager em;
 
-  @Transactional
   public Long makeTask(MakeTaskRequest request, Member member) {
     //EIType이 PENDING이고, Next가 null인 (마지막) 거 가져옴
     List<Task> taskList = taskRepository.findByMemberAndEiTypeAndNext(member, EIType.PENDING, null);
@@ -66,9 +68,10 @@ public class TaskService {
     return task.getId();
   }
 
+  @Transactional(readOnly = true)
   public DashBoardResponse getAllTask(Member member) {
 
-    List<Task> taskList = taskRepository.findByMemberOrderByEiType(member);
+    List<Task> taskList = taskRepository.findByMemberAndIsHistoryIsFalseOrderByEiType(member);
 
     List<Task> listPENDING = new ArrayList<>();
     List<Task> listIMPORTANT_URGENT = new ArrayList<>();
@@ -167,7 +170,6 @@ public class TaskService {
     return sortedList;
   }
 
-  @Transactional
   public void move(Long taskId, TaskMoveRequest taskList, Member member) {
     Task findTask = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
@@ -223,7 +225,6 @@ public class TaskService {
     findTask.setNextTask(next2);
   }
 
-  @Transactional
   public void delete(Long taskId, Member member) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
@@ -250,7 +251,6 @@ public class TaskService {
     taskRepository.delete(task);
   }
 
-  @Transactional
   public void edit(Long taskId, TaskEditRequest request, Member member) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
@@ -263,6 +263,7 @@ public class TaskService {
     task.edit(request.getTitle(), request.getDescription(), dateTime, request.is_time_include());
   }
 
+  @Transactional(readOnly = true)
   public TaskResponse getInfo(Long taskId, Member member) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
@@ -281,10 +282,39 @@ public class TaskService {
 
   }
 
+
   public void editCheck(Long taskId, TaskCheckDto dto) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없습니다"));
 
-    task.check(dto.is_checked());
+    task.check(dto.getIs_checked());
+  }
+
+  public void cleanCompleteTasks(Member member) {
+    List<Task> taskList = taskRepository.findByMemberAndIsCompletedIsTrue(member);
+
+    for (Task task: taskList) {
+      historyRepository.save(History.makeHistory(member, task));
+
+      Task prev = task.getPrev();
+      Task next = task.getNext();
+
+      task.setPrevTask(null);
+      task.setNextTask(null);
+
+      em.flush();
+      em.clear();
+
+      if (prev != null)
+        prev = taskRepository.findById(prev.getId()).orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+      if (next != null)
+        next = taskRepository.findById(next.getId()).orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+
+      if (prev != null)
+        prev.setNextTask(next);
+      if (next != null)
+        next.setPrevTask(prev);
+    }
+
   }
 }
