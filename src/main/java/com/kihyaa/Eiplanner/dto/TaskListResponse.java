@@ -1,17 +1,18 @@
 package com.kihyaa.Eiplanner.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor
-@Builder
 @Getter
 public class TaskListResponse {
   private int count;
   private List<TaskResponse> tasks;
+
+  public TaskListResponse(List<TaskResponse> tasks) {
+    this.tasks = tasks;
+    this.count = tasks.size();
+  }
 }
