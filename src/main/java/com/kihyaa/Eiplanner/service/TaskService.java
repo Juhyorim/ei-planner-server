@@ -14,8 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,9 +30,9 @@ public class TaskService {
   private final EntityManager em;
 
   @Transactional
-  public Long makeTask(MakeTaskRequest request) {
-    Member member = memberRepository.findById(request.getMember_id())
-        .orElseThrow(() -> new NoSuchElementException("해당하는 멤버가 없습니다"));
+  public Long makeTask(MakeTaskRequest request, Member member) {
+//    Member member = memberRepository.findById(request.getMember_id())
+//        .orElseThrow(() -> new NoSuchElementException("해당하는 멤버가 없습니다"));
 
     //EIType이 PENDING이고, Next가 null인 (마지막) 거 가져옴
     List<Task> taskList = taskRepository.findByMemberAndEiTypeAndNext(member, EIType.PENDING, null);
@@ -59,9 +61,7 @@ public class TaskService {
     return task.getId();
   }
 
-  public DashBoardResponse getAllTask() {
-    Member member = memberRepository.findById(1L)
-      .orElseThrow(() -> new NoSuchElementException());
+  public DashBoardResponse getAllTask(Member member) {
 
     List<Task> taskList = taskRepository.findByMemberOrderByEiType(member);
 
@@ -163,7 +163,7 @@ public class TaskService {
   }
 
   @Transactional
-  public void move(Long taskId, TaskMoveRequest taskList) {
+  public void move(Long taskId, TaskMoveRequest taskList, Member member) {
     Task findTask = taskRepository.findById(taskId)
       .orElseThrow(() -> new NoSuchElementException("해당하는 task가 없습니다"));
 
@@ -219,12 +219,23 @@ public class TaskService {
   }
 
   @Transactional
-  public void delete(Long taskId) {
+  public void delete(Long taskId, Member member) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NoSuchElementException());
 
     Task prev = task.getPrev();
     Task next = task.getNext();
+
+    task.setPrevTask(null);
+    task.setNextTask(null);
+
+    em.flush();
+    em.clear();
+
+    if (prev != null)
+      prev = taskRepository.findById(prev.getId()).orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없음"));
+    if (next != null)
+      next = taskRepository.findById(next.getId()).orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없음"));
 
     if (prev != null)
       prev.setNextTask(next);
@@ -232,5 +243,24 @@ public class TaskService {
       next.setPrevTask(prev);
 
     taskRepository.delete(task);
+  }
+
+  @Transactional
+  public void edit(Long taskId, TaskEditRequest request, Member member) {
+    Task task = taskRepository.findById(taskId)
+      .orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없습니다"));
+
+    if (!isValidTimeFormat(request.getEnd_time())) {
+      throw new InputMismatchException("시간 값이 잘못되었습니다");
+    }
+
+    task.edit(request.getTitle(), request.getDescription(), request.getEnd_date(), request.getEnd_time());
+  }
+
+  private boolean isValidTimeFormat(String time) {
+
+    String pattern = "^([01]\\d|2[0-3]):[0-5]\\d$";  //00:00 ~ 23:59 사이의 값인지 확인
+
+    return Pattern.matches(pattern, time);
   }
 }

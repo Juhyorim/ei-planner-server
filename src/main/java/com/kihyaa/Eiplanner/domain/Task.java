@@ -2,6 +2,7 @@ package com.kihyaa.Eiplanner.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -72,5 +73,12 @@ public class Task {
 
     public void setEiType(EIType eiType) {
         this.eiType = eiType;
+    }
+
+    public void edit(String title, String description, LocalDate endDate, String endTime) {
+        this.title = title;
+        this.description = description;
+        this.endDate = endDate;
+        this.endTime = LocalTime.parse(endTime);
     }
 }
