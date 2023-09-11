@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,8 +18,8 @@ public class TaskResponse {
   private Long id;
   private String title;
   private String description;
-  private LocalDate end_date;
-  private String end_time;
+  private LocalDateTime end_at;
+  private boolean isTimeInclude;
 
   public static List<TaskResponse> convert(List<Task> taskList) {
     List<TaskResponse> responses = new ArrayList<>();
@@ -29,8 +29,8 @@ public class TaskResponse {
           .id(task.getId())
           .title(task.getTitle())
           .description(task.getDescription())
-          .end_date(task.getEndDate())
-          .end_time(task.getEndTime().toString())
+          .end_at(task.getEndAt())
+          .isTimeInclude(task.getIsTimeInclude())
           .build()
       );
     }

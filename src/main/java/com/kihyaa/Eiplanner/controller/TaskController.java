@@ -23,11 +23,6 @@ public class TaskController {
   //일정 만들기
   @PostMapping
   public ResponseEntity makeTask(@RequestBody @Valid MakeTaskRequest request, @CurrentMember Member member) {
-
-    //시간이 있으면 날짜는 필수
-    if (request.getEnd_date() == null && request.getEnd_time() != null)
-      return ResponseEntity.badRequest().build();
-
     taskService.makeTask(request, member);
 
     return ResponseEntity.ok().build();
@@ -40,7 +35,6 @@ public class TaskController {
 
     return ResponseEntity.ok().build();
   }
-
 
   //일정 삭제
   @DeleteMapping("/{task_id}")
@@ -59,7 +53,7 @@ public class TaskController {
 
   //일정 내용 수정
   @PutMapping("/{task_id}")
-  public ResponseEntity editTask(@PathVariable("task_id")Long taskId, @RequestBody TaskEditRequest request, @CurrentMember Member member) {
+  public ResponseEntity editTask(@PathVariable("task_id")Long taskId, @RequestBody @Valid TaskEditRequest request, @CurrentMember Member member) {
     taskService.edit(taskId, request, member);
 
     ApiResponse response = ApiResponse.builder()
@@ -77,5 +71,13 @@ public class TaskController {
     TaskResponse info = taskService.getInfo(taskId, member);
 
     return ResponseEntity.ok(info);
+  }
+
+  //일정 완료 체크, 체크취소
+  @PutMapping("/{task_id}/checked")
+  public ResponseEntity completeCheck(@PathVariable("task_id")Long taskId, TaskCheckDto dto) {
+    taskService.editCheck(taskId, dto);
+
+    return ResponseEntity.ok().build();
   }
 }

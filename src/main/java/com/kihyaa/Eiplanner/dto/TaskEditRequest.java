@@ -1,19 +1,21 @@
 package com.kihyaa.Eiplanner.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 public class TaskEditRequest {
+  @NotNull
   private String title;
   private String description;
-  private LocalDate end_date;
-  @Schema(example = "05:12")
-  private String end_time;
+  private LocalDateTime end_at;
+  @JsonProperty("is_time_include")
+  private boolean is_time_include;
 }
