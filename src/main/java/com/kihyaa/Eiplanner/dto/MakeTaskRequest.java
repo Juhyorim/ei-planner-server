@@ -20,6 +20,5 @@ public class MakeTaskRequest {
   private String description;
   private LocalDateTime end_at;
 
-  @JsonProperty //자꾸 is가 사라져서 이거 붙임
-  private boolean isTimeInclude;
+  private Boolean isTimeInclude;
 }
