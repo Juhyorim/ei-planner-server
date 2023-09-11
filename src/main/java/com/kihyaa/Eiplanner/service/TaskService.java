@@ -14,12 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.regex.Pattern;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -42,12 +41,19 @@ public class TaskService {
     if (taskList.size() != 0)
       prev = taskList.get(0);
 
+    LocalDateTime dateTime = request.getEnd_at();
+    //time이 포함되지 않았다면 그냥 저장
+    if (dateTime != null && !request.isTimeInclude())
+      dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+    log.info("@@: " + request.isTimeInclude());
+
     Task task = Task.builder()
       .member(member)
       .title(request.getTitle())
-      .description(request.getDescription())
-      .endDate((request.getEnd_date() != null) ? request.getEnd_date(): null)
-      .endTime((request.getEnd_time() != null) ? LocalTime.parse(request.getEnd_time()): null)
+      .description((request.getDescription() != null)? request.getDescription() : null)
+      .endAt((dateTime != null) ? dateTime: null)
+      .isTimeInclude(request.isTimeInclude())
       .prev(prev)
       .build();
 
@@ -249,18 +255,12 @@ public class TaskService {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-    if (!isValidTimeFormat(request.getEnd_time())) {
-      throw new InputMismatchException("시간 값이 잘못되었습니다");
-    }
+    LocalDateTime dateTime = request.getEnd_at();
+    //time이 포함되지 않았다면 그냥 저장
+    if (dateTime != null && !request.is_time_include())
+      dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
 
-    task.edit(request.getTitle(), request.getDescription(), request.getEnd_date(), request.getEnd_time());
-  }
-
-  private boolean isValidTimeFormat(String time) {
-
-    String pattern = "^([01]\\d|2[0-3]):[0-5]\\d$";  //00:00 ~ 23:59 사이의 값인지 확인
-
-    return Pattern.matches(pattern, time);
+    task.edit(request.getTitle(), request.getDescription(), dateTime, request.is_time_include());
   }
 
   public TaskResponse getInfo(Long taskId, Member member) {
@@ -275,8 +275,8 @@ public class TaskService {
       .id(taskId)
       .title(task.getTitle())
       .description(task.getDescription())
-      .end_date(task.getEndDate())
-      .end_time(task.getEndTime().toString().substring(0, 5))
+      .end_at(task.getEndAt())
+      .isTimeInclude(task.getIsTimeInclude())
       .build();
 
   }

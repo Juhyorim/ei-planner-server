@@ -2,11 +2,7 @@ package com.kihyaa.Eiplanner.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.cglib.core.Local;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Entity
 @Getter
@@ -28,14 +24,15 @@ public class Task {
     @Lob
     private String description;
 
-    @Column(columnDefinition = "DATE")
-    private LocalDate endDate;
+    @Column(columnDefinition = "TIMESTAMP")
+    private LocalDateTime endAt;
 
-    @Column(columnDefinition = "TIME")
-    private LocalTime endTime;
+    //시간 포함 여부
+    private Boolean isTimeInclude;
 
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt = LocalDateTime.now();
+
 
     @Enumerated(EnumType.STRING)
     private EIType eiType = EIType.PENDING;
@@ -54,12 +51,12 @@ public class Task {
     private Task prev = null; //@TODO 삭제할 때 꼭 고려
 
     @Builder
-    public Task(Member member, String title, String description, LocalDate endDate, LocalTime endTime, Task prev) {
+    public Task(Member member, String title, String description, LocalDateTime endAt, boolean isTimeInclude, Task prev) {
         this.member = member;
         this.title = title;
         this.description = description;
-        this.endDate = endDate;
-        this.endTime = endTime;
+        this.endAt = endAt;
+        this.isTimeInclude = isTimeInclude;
         this.prev = prev;
     }
 
@@ -75,11 +72,11 @@ public class Task {
         this.eiType = eiType;
     }
 
-    public void edit(String title, String description, LocalDate endDate, String endTime) {
+    public void edit(String title, String description, LocalDateTime endAt, boolean isTimeInclude) {
         this.title = title;
         this.description = description;
-        this.endDate = endDate;
-        this.endTime = LocalTime.parse(endTime);
+        this.endAt = endAt;
+        this.isTimeInclude = isTimeInclude;
     }
 
     public void check(boolean checked) {

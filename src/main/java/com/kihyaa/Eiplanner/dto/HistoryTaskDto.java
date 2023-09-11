@@ -5,10 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,8 +13,8 @@ public class HistoryTaskDto {
     private Long id;
     private String title;
     private String description;
-    private LocalDate end_date;
-    private LocalTime end_time;
+    private LocalDateTime end_at;
+    private boolean isTimeInclude;
     private LocalDateTime completed_at;
 
     public static HistoryTaskDto of(Task task) {
@@ -25,8 +22,8 @@ public class HistoryTaskDto {
                 task.getId(),
                 task.getTitle(),
                 task.getDescription(),
-                task.getEndDate(),
-                task.getEndTime(),
+                task.getEndAt(),
+                task.getIsTimeInclude(),
                 task.getCompletedAt()
         );
     }
