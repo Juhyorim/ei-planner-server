@@ -28,6 +28,11 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
+
+        if (request.getRequestURI().contains("/register") || request.getRequestURI().contains("/login")) {
+            return;
+        }
+
         String errorMessage = authException.getMessage();
         ErrorDTO errorDto = new ErrorDTO("인증되지 않은 요청입니다!", errorMessage);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
