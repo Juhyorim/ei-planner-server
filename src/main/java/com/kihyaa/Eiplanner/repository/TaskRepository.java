@@ -18,6 +18,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
   List<Task> findByMemberAndIsCompletedIsTrueAndIsHistoryIsFalse(Member member);
 
+
 //  List<Task> findByMemberAndIsHistoryIsTrueOrderByCompletedAt(Member member, Pageable pageable);
 
   @Query(value = "SELECT t.* " +

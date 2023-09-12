@@ -106,19 +106,11 @@ public class TaskService {
       }
     }
 
-    for (Task t: listPENDING) {
-      log.info("##: " + t.getId());
-    }
-
     List<Task> sortedListPENDING = sortTask(listPENDING);
     List<Task> sortedListIMPORTANT_URGENT = sortTask(listIMPORTANT_URGENT);
     List<Task> sortedListIMPORTANT_NOT_URGENT = sortTask(listIMPORTANT_NOT_URGENT);
     List<Task> sortedListNOT_IMPORTANT_URGENT = sortTask(listNOT_IMPORTANT_URGENT);
     List<Task> sortedListNOT_IMPORTANT_NOT_URGENT = sortTask(listNOT_IMPORTANT_NOT_URGENT);
-
-    for (Task t: sortedListPENDING) {
-      log.info("@@: " + t.getId());
-    }
 
     return DashBoardResponse.builder()
       .pending(new TaskListResponse(TaskResponse.convert(sortedListPENDING, isViewDateTime)))
@@ -156,6 +148,8 @@ public class TaskService {
 
       sortedList.add(current);
     }
+
+    //@TODO 오류처리 0 list.size != sortedList.sie
 
     return sortedList;
   }
@@ -203,7 +197,7 @@ public class TaskService {
 
     //내가 없으면
     if (idx == -1)
-      throw new InputMismatchException("일정 배열이 이상합니다");
+      throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
 
     Task prev2 = null;
     Task next2 = null;
@@ -282,6 +276,7 @@ public class TaskService {
       .description(task.getDescription())
       .endAt(task.getEndAt())
       .isTimeInclude(task.getIsTimeInclude())
+      .isCompleted(task.getIsCompleted())
       .build();
   }
 

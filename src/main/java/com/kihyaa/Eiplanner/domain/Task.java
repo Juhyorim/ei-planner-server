@@ -84,11 +84,11 @@ public class Task {
 
     public void check(boolean checked) {
         this.isCompleted = checked;
+
         if (checked)
             this.completedAt = LocalDateTime.now();
         else
             this.completedAt = null;
-
     }
 
     public void sendHistory() {
