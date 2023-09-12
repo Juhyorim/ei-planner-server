@@ -76,6 +76,7 @@ public class TaskService {
   @Transactional(readOnly = true)
   public DashBoardResponse getAllTask(Member member) {
 
+    //Member의 history가 아닌 모든 task를 가져옴 - 정렬은 EiType으로
     List<Task> taskList = taskRepository.findByMemberAndIsHistoryIsFalseOrderByEiType(member);
 
     boolean isViewDateTime = member.getSetting().getIsViewDateTime();
@@ -105,11 +106,19 @@ public class TaskService {
       }
     }
 
+    for (Task t: listPENDING) {
+      log.info("##: " + t.getId());
+    }
+
     List<Task> sortedListPENDING = sortTask(listPENDING);
     List<Task> sortedListIMPORTANT_URGENT = sortTask(listIMPORTANT_URGENT);
     List<Task> sortedListIMPORTANT_NOT_URGENT = sortTask(listIMPORTANT_NOT_URGENT);
     List<Task> sortedListNOT_IMPORTANT_URGENT = sortTask(listNOT_IMPORTANT_URGENT);
     List<Task> sortedListNOT_IMPORTANT_NOT_URGENT = sortTask(listNOT_IMPORTANT_NOT_URGENT);
+
+    for (Task t: sortedListPENDING) {
+      log.info("@@: " + t.getId());
+    }
 
     return DashBoardResponse.builder()
       .pending(new TaskListResponse(TaskResponse.convert(sortedListPENDING, isViewDateTime)))
@@ -141,6 +150,10 @@ public class TaskService {
     //next next 연결
     while (sortedList.size() != list.size()) {
       current = current.getNext();
+
+      if (current == null)
+        break;
+
       sortedList.add(current);
     }
 
@@ -157,6 +170,18 @@ public class TaskService {
 
     findTask.setPrevTask(null);
     findTask.setNextTask(null);
+
+    em.flush();
+    em.clear();
+
+    findTask = taskRepository.findById(taskId)
+      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+    if (prev != null)
+      prev= taskRepository.findById(prev.getId())
+        .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+    if (next != null)
+      next = taskRepository.findById(next.getId())
+        .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     if (prev != null)
       prev.setNextTask(next);
@@ -268,7 +293,8 @@ public class TaskService {
   }
 
   public void cleanCompleteTasks(Member member) {
-    List<Task> taskList = taskRepository.findByMemberAndIsCompletedIsTrue(member);
+    //완료됐으면서 + hisotry가 아닌애들 다 보내기
+    List<Task> taskList = taskRepository.findByMemberAndIsCompletedIsTrueAndIsHistoryIsFalse(member);
 
     for (Task task: taskList) {
       historyRepository.save(History.makeHistory(member, task));
@@ -279,6 +305,7 @@ public class TaskService {
       task.setPrevTask(null);
       task.setNextTask(null);
 
+      //영속성 컨텍스트 비우가
       em.flush();
       em.clear();
 

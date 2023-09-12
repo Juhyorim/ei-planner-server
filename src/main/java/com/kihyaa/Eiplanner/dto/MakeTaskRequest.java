@@ -22,6 +22,7 @@ public class MakeTaskRequest {
   @JsonProperty("end_at")
   private LocalDateTime endAt;
 
+  @NotNull
   @JsonProperty("is_time_include")
   private Boolean isTimeInclude;
 }
