@@ -28,8 +28,9 @@ public class MemberController {
     public ResponseEntity<MemberResponse> getMember(@CurrentMember Member member) {
         return ResponseEntity.ok(
                 MemberResponse.builder()
-                .nickname(member.getNickname())
-                .profileImageUrl(member.getProfileImgUrl())
+                    .email(member.getEmail())
+                    .nickname(member.getNickname())
+                    .profileImageUrl(member.getProfileImgUrl())
                 .build());
     }
 

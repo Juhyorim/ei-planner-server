@@ -36,14 +36,14 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests((Requests) -> {
                     Requests.requestMatchers(
-                            "/api/v1/auth/**",
-                            "/swagger",
-                            "/swagger-ui*/**",
-                            "/swagger-resources/**",
-                            "/api-docs/**"
-                    ).permitAll();
+                            "/api/v1/auth/logout",
+                            "/api/v1/auth/delete",
+                            "/api/v1/history/**",
+                            "/api/v1/tasks/**",
+                            "/api/v1/settings/**"
+                    ).authenticated();
 
-                    Requests.anyRequest().authenticated();
+                    Requests.anyRequest().permitAll();
                 })
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
