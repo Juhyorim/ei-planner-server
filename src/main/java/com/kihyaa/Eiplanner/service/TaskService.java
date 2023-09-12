@@ -55,7 +55,7 @@ public class TaskService {
 
   private Task getFirstTaskPending(Member member) {
     //EIType이 PENDING이고, Next가 null인 (마지막) 거 가져옴
-    List<Task> taskList = taskRepository.findByMemberAndEiTypeAndNext(member, EIType.PENDING, null);
+    List<Task> taskList = taskRepository.findByMemberAndEiTypeAndNextIsNullAndIsHistoryIsFalse(member, EIType.PENDING);
 
     if (taskList.size() == 0)
       return null;
@@ -297,6 +297,7 @@ public class TaskService {
     List<Task> taskList = taskRepository.findByMemberAndIsCompletedIsTrueAndIsHistoryIsFalse(member);
 
     for (Task task: taskList) {
+      task = taskRepository.findById(task.getId()).orElseThrow(() -> new InternalServerErrorException("asdf"));
       historyRepository.save(History.makeHistory(member, task));
 
       Task prev = task.getPrev();
