@@ -3,6 +3,7 @@ package com.kihyaa.Eiplanner.exception;
 import com.kihyaa.Eiplanner.dto.response.ApiResponse;
 import com.kihyaa.Eiplanner.exception.exceptions.ConflictException;
 import com.kihyaa.Eiplanner.exception.exceptions.ForbiddenException;
+import com.kihyaa.Eiplanner.exception.exceptions.InternalServerErrorException;
 import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
@@ -58,5 +59,11 @@ public class GlobalExceptionHandler {
   protected ResponseEntity<ApiResponse> handleConflictException(ConflictException e) {
     log.info("ConflictException = {}", e.getMessage());
     return ApiResponse.createResponse(e.getMessage(), HttpStatus.CONFLICT);
+  }
+
+  @ExceptionHandler(InternalServerErrorException.class)
+  protected ResponseEntity<ApiResponse> handleInternalServerErrorException(InternalServerErrorException e) {
+    log.info("InternalServerErrorException = {}", e.getMessage());
+    return ApiResponse.createResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }

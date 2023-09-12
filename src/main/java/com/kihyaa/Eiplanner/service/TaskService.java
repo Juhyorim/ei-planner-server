@@ -1,12 +1,13 @@
 package com.kihyaa.Eiplanner.service;
 
-import com.kihyaa.Eiplanner.exception.exceptions.ForbiddenException;
-import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.domain.EIType;
 import com.kihyaa.Eiplanner.domain.History;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Task;
 import com.kihyaa.Eiplanner.dto.*;
+import com.kihyaa.Eiplanner.exception.exceptions.ForbiddenException;
+import com.kihyaa.Eiplanner.exception.exceptions.InternalServerErrorException;
+import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.repository.HistoryRepository;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
 import com.kihyaa.Eiplanner.repository.TaskRepository;
@@ -17,10 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,33 +27,20 @@ import java.util.NoSuchElementException;
 public class TaskService {
 
   private final TaskRepository taskRepository;
-  private final MemberRepository memberRepository;
   private final HistoryRepository historyRepository;
   private final EntityManager em;
 
   public Long makeTask(MakeTaskRequest request, Member member) {
-    //EIType이 PENDING이고, Next가 null인 (마지막) 거 가져옴
-    List<Task> taskList = taskRepository.findByMemberAndEiTypeAndNext(member, EIType.PENDING, null);
+    Task prev = getFirstTaskPending(member);
 
-    Task prev = null;
-
-    //첫 번째가 아니라면
-    if (taskList.size() != 0)
-      prev = taskList.get(0);
-
-    LocalDateTime dateTime = request.getEndAt();
-    //time이 포함되지 않았다면 그냥 저장
-    if (dateTime != null && !request.getIsTimeInclude())
-      dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
-
-    log.info("@@: " + request.getIsTimeInclude());
+    LocalDateTime dateTime = validAndEditDateTime(request.getEndAt(), request.getIsTimeInclude());
 
     Task task = Task.builder()
       .member(member)
       .title(request.getTitle())
       .description((request.getDescription() != null)? request.getDescription() : null)
       .endAt((dateTime != null) ? dateTime: null)
-      .isTimeInclude((dateTime != null)? request.getIsTimeInclude(): false)
+      .isTimeInclude((dateTime != null)? request.getIsTimeInclude(): false) //dateTime이 안들어오면 timeInclude는 false여야함
       .prev(prev)
       .build();
 
@@ -68,10 +53,32 @@ public class TaskService {
     return task.getId();
   }
 
+  private Task getFirstTaskPending(Member member) {
+    //EIType이 PENDING이고, Next가 null인 (마지막) 거 가져옴
+    List<Task> taskList = taskRepository.findByMemberAndEiTypeAndNext(member, EIType.PENDING, null);
+
+    if (taskList.size() == 0)
+      return null;
+    else if (taskList.size() == 1)  //PENDING 상태인 일정이 하나면
+      return taskList.get(0);
+    else //1개 이상
+      throw new InternalServerErrorException("일정 배열의 값이 이상합니다. 데이터베이스 이상.. 관리자에게 문의하세요");
+  }
+
+  public LocalDateTime validAndEditDateTime(LocalDateTime dateTime, boolean isTimeInclude) {
+    //timeInclude가 false인데 dateTime이 null이 아니면 -> 시간은 쓸모없는거니까 시간부분 초기화
+    if (dateTime != null && !isTimeInclude)
+      dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+    return dateTime;
+  }
+
   @Transactional(readOnly = true)
   public DashBoardResponse getAllTask(Member member) {
 
     List<Task> taskList = taskRepository.findByMemberAndIsHistoryIsFalseOrderByEiType(member);
+
+    boolean isViewDateTime = member.getSetting().getIsViewDateTime();
 
     List<Task> listPENDING = new ArrayList<>();
     List<Task> listIMPORTANT_URGENT = new ArrayList<>();
@@ -81,28 +88,20 @@ public class TaskService {
 
     int i =0;
     while(i < taskList.size()) {
-      while (taskList.get(i).getEiType() != EIType.PENDING) {
-        listPENDING.add(taskList.get(i));
-        i++;
+      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.PENDING) {
+        listPENDING.add(taskList.get(i)); i++;
       }
-      while (i < taskList.size() && taskList.get(i).getEiType() != EIType.IMPORTANT_URGENT) {
-        listIMPORTANT_URGENT.add(taskList.get(i));
-        i++;
+      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.IMPORTANT_URGENT) {
+        listIMPORTANT_URGENT.add(taskList.get(i)); i++;
       }
-
-      while (i < taskList.size() && taskList.get(i).getEiType() != EIType.IMPORTANT_NOT_URGENT) {
-        listIMPORTANT_NOT_URGENT.add(taskList.get(i));
-        i++;
+      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.IMPORTANT_NOT_URGENT) {
+        listIMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;
       }
-
-      while (i < taskList.size() && taskList.get(i).getEiType() != EIType.NOT_IMPORTANT_URGENT){
-        listNOT_IMPORTANT_URGENT.add(taskList.get(i));
-        i++;
+      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.NOT_IMPORTANT_URGENT){
+        listNOT_IMPORTANT_URGENT.add(taskList.get(i)); i++;
       }
-
-      while (i < taskList.size() && taskList.get(i).getEiType() != EIType.NOT_IMPORTANT_NOT_URGENT) {
-        listNOT_IMPORTANT_NOT_URGENT.add(taskList.get(i));
-        i++;
+      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.NOT_IMPORTANT_NOT_URGENT) {
+        listNOT_IMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;
       }
     }
 
@@ -112,45 +111,21 @@ public class TaskService {
     List<Task> sortedListNOT_IMPORTANT_URGENT = sortTask(listNOT_IMPORTANT_URGENT);
     List<Task> sortedListNOT_IMPORTANT_NOT_URGENT = sortTask(listNOT_IMPORTANT_NOT_URGENT);
 
-
     return DashBoardResponse.builder()
-      .pending(
-        TaskListResponse.builder()
-          .count(sortedListPENDING.size())
-          .tasks(TaskResponse.convert(sortedListPENDING))
-          .build()
-      )
-      .important_urgent(
-        TaskListResponse.builder()
-          .count(sortedListIMPORTANT_URGENT.size())
-          .tasks(TaskResponse.convert(sortedListIMPORTANT_URGENT))
-          .build()
-      )
-      .important_not_urgent(
-        TaskListResponse.builder()
-          .count(sortedListIMPORTANT_NOT_URGENT.size())
-          .tasks(TaskResponse.convert(sortedListIMPORTANT_NOT_URGENT))
-          .build()
-      )
-      .not_important_urgent(
-        TaskListResponse.builder()
-          .count(sortedListNOT_IMPORTANT_URGENT.size())
-          .tasks(TaskResponse.convert(sortedListNOT_IMPORTANT_URGENT))
-          .build()
-      )
-      .not_important_not_urgent(
-        TaskListResponse.builder()
-          .count(sortedListNOT_IMPORTANT_NOT_URGENT.size())
-          .tasks(TaskResponse.convert(sortedListNOT_IMPORTANT_NOT_URGENT))
-          .build()
-      )
+      .pending(new TaskListResponse(TaskResponse.convert(sortedListPENDING, isViewDateTime)))
+      .important_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_URGENT, isViewDateTime)))
+      .important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_NOT_URGENT, isViewDateTime)))
+      .not_important_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_URGENT, isViewDateTime)))
+      .not_important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_NOT_URGENT, isViewDateTime)))
       .build();
   }
 
+  //prev, next 순서에 따라 재배열하는 메서드
   private List<Task> sortTask(List<Task> list) {
     List<Task> sortedList = new ArrayList<>();
     Task current = null;
 
+    //첫 번째 값을 찾음(prev가 null인 경우)
     for (Task task: list) {
       if (task.getPrev() == null) {
         sortedList.add(task);
@@ -159,9 +134,11 @@ public class TaskService {
       }
     }
 
+    //값이 하나도 없을 때
     if (current == null)
       return new ArrayList<>();
 
+    //next next 연결
     while (sortedList.size() != list.size()) {
       current = current.getNext();
       sortedList.add(current);
@@ -191,6 +168,7 @@ public class TaskService {
     List<Long> tasks = taskList.getTasks();
 
     int idx = -1;
+    //나 찾기
     for (int i =0; i<tasks.size(); i++) {
       if (tasks.get(i) == findTask.getId()) {
         idx = i;
@@ -198,18 +176,19 @@ public class TaskService {
       }
     }
 
+    //내가 없으면
     if (idx == -1)
-      throw new NoSuchElementException();
+      throw new InputMismatchException("일정 배열이 이상합니다");
 
     Task prev2 = null;
     Task next2 = null;
     if (idx-1 >= 0) {
-      prev2 = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("일정의 배열이 이상합니다"));
+      prev2 = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
       prev2.setNextTask(findTask);
     }
 
     if (idx+1 <tasks.size()) {
-      next2 = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("일정의 배열이 이상합니다"));
+      next2 = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
       next2.setPrevTask(findTask);
     }
 
@@ -251,7 +230,7 @@ public class TaskService {
     taskRepository.delete(task);
   }
 
-  public void edit(Long taskId, TaskEditRequest request, Member member) {
+  public void edit(Long taskId, TaskEditRequest request) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
@@ -279,9 +258,7 @@ public class TaskService {
       .endAt(task.getEndAt())
       .isTimeInclude(task.getIsTimeInclude())
       .build();
-
   }
-
 
   public void editCheck(Long taskId, TaskCheckDto dto) {
     Task task = taskRepository.findById(taskId)
@@ -315,6 +292,26 @@ public class TaskService {
       if (next != null)
         next.setPrevTask(prev);
     }
+  }
 
+  @Transactional
+  public void scheduleTaskTypeRotation(){
+
+    List<Task> taskNotUrgencyTasks = taskRepository.findNotUrgencyTask(LocalDateTime.now());
+
+    for(Task task : taskNotUrgencyTasks){
+      editToUrgentEiType(task);
+    }
+  }
+
+  private void editToUrgentEiType(Task task) {
+    Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
+    urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
+    urgencyRotationMap.put(EIType.NOT_IMPORTANT_NOT_URGENT, EIType.NOT_IMPORTANT_URGENT);
+
+    EIType newEiType = urgencyRotationMap.get(task.getEiType());
+    if (newEiType != null) {
+      task.setEiType(newEiType);
+    }
   }
 }
