@@ -4,34 +4,44 @@ import com.kihyaa.Eiplanner.annotation.CurrentMember;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.exception.MessageCode;
 import com.kihyaa.Eiplanner.dto.auth.LoginRequest;
-import com.kihyaa.Eiplanner.dto.auth.LoginResponse;
 import com.kihyaa.Eiplanner.dto.auth.RegisterRequest;
 import com.kihyaa.Eiplanner.dto.response.ApiResponse;
 import com.kihyaa.Eiplanner.service.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    @Value("${frontendUrl}")
+    private String frontendUrl;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
+    public void register(@Valid @RequestBody RegisterRequest registerRequest,  HttpServletResponse response) throws IOException {
 
-        authService.register(registerRequest);
-
-        return ApiResponse.createResponse(MessageCode.SUCCESS_CREATE_RESOURCE, HttpStatus.CREATED);
+        String token = authService.register(registerRequest);
+        String redirectUrl = frontendUrl + "?token=" + token;
+        log.info("token = {}", token);
+        response.sendRedirect(redirectUrl);
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
-
-        return authService.login(loginRequest);
+    public void login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) throws IOException {
+        String token = authService.login(loginRequest);
+        String redirectUrl = frontendUrl + "?token=" + token;
+        log.info("token = {}", token);
+        response.sendRedirect(redirectUrl);
     }
 
     @DeleteMapping("/delete")
@@ -44,7 +54,6 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse> logout() {
-        ///TODO [HJ] 1차 개발 후에 추가적인 서버측 로그아웃 로직 구현
         return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
     }
 }

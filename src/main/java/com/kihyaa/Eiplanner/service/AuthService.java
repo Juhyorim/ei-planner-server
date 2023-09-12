@@ -30,13 +30,15 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     // 회원 가입
-    public void register(RegisterRequest registerRequest) {
+    public String register(RegisterRequest registerRequest) {
         validateRegisterRequest(registerRequest);
 
         Setting setting = buildSetting();
         Member member = buildMember(registerRequest, setting);
 
         memberRepository.save(member);
+
+        return createToken(member);
     }
 
     private Setting buildSetting() {
@@ -59,9 +61,9 @@ public class AuthService {
     }
 
     // 로그인
-    public LoginResponse login(LoginRequest loginRequest) {
+    public String login(LoginRequest loginRequest) {
         Member member = findValidMember(loginRequest);
-        return createLoginResponse(member);
+        return createToken(member);
     }
 
     // Member 객체 생성
@@ -85,15 +87,8 @@ public class AuthService {
     }
 
     // 로그인 응답 생성
-    private LoginResponse createLoginResponse(Member member) {
-        String token = jwtProvider.createToken(String.format("%s:%s", member.getId(), "MEMBER"));
-
-        return LoginResponse.builder()
-                .token(token)
-                .nickname(member.getNickname())
-                .profileImageUrl(member.getProfileImgUrl())
-                .email(member.getEmail())
-                .build();
+    private String createToken(Member member) {
+        return  jwtProvider.createToken(String.format("%s:%s", member.getId(), "MEMBER"));
     }
 
     //회원 탈퇴

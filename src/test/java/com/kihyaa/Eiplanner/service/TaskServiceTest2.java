@@ -45,12 +45,9 @@ public class TaskServiceTest2 {
 
   @Autowired
   private TaskRepository taskRepository;
-  @Autowired
-  private SettingRepository settingRepository;
 
   private Member member;
 
-  //member.getId(), "제목", "설명", null, null);
   private String title = "제목1";
   private String description = "설명2";
 
@@ -255,10 +252,36 @@ public class TaskServiceTest2 {
     assertEquals(taskId2, imUr.getTasks().get(2).getId());
   }
 
+  @DisplayName("일정 조회 테스트")
+  @Transactional
+  @Order(8)
+  @Test
+  void getAllTask() {
+    make4Task();
+
+    List<Long> lst = makeDestinationOrderList(new Long[]{taskId1});
+    taskService.move(taskId1, new TaskMoveRequest(EIType.NOT_IMPORTANT_NOT_URGENT, lst), member);
+
+    lst = makeDestinationOrderList(new Long[]{taskId1, taskId2});
+    taskService.move(taskId2, new TaskMoveRequest(EIType.NOT_IMPORTANT_NOT_URGENT, lst), member);
+
+    DashBoardResponse allTask = taskService.getAllTask(member);
+
+    //PENDING에 2개, NOT_IMPORTANT_NOT_URGENT에 2개 확인
+    TaskListResponse pending = allTask.getPending();
+    TaskListResponse notImportantNotUrgent = allTask.getNot_important_not_urgent();
+
+    assertEquals(taskId3, pending.getTasks().get(0).getId());
+    assertEquals(taskId4, pending.getTasks().get(1).getId());
+
+    assertEquals(taskId1, notImportantNotUrgent.getTasks().get(0).getId());
+    assertEquals(taskId2, notImportantNotUrgent.getTasks().get(1).getId());
+  }
+
   //일정 정리하기 테스트
   @DisplayName("일정 완료 테스트")
   @Transactional
-  @Order(7)
+  @Order(9)
   @Test
   void completeTask() {
     make4Task();
@@ -289,7 +312,7 @@ public class TaskServiceTest2 {
   //일정 정리하기 테스트
   @DisplayName("일정 정리하기 테스트")
   @Transactional
-  @Order(8)
+  @Order(10)
   @Test
   void clearCompleteTask() throws InterruptedException {
     make4Task();
@@ -313,5 +336,13 @@ public class TaskServiceTest2 {
     assertEquals(taskId2, historys.get(1).getId());
     assertEquals(taskId3, historys.get(0).getId());
   }
+
+  //일정 삭제 테스트-첫 번째 위치
+
+  //일정 삭제 테스트-마지막 위치
+
+  //일정 삭제 테스트-중간 위치
+
+
 
 }
