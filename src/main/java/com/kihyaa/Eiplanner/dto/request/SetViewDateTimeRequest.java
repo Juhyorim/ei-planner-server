@@ -1,3 +1,4 @@
+
 package com.kihyaa.Eiplanner.dto.request;
 
 import jakarta.validation.constraints.NotNull;
@@ -10,6 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SetViewDateTimeRequest {
     @NotNull
-    private Boolean display_date_time;
+    private Boolean is_display_date_time;
 
 }

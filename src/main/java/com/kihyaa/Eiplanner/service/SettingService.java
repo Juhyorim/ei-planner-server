@@ -18,17 +18,16 @@ public class SettingService {
     final SettingRepository settingRepository;
 
     @Transactional
-    public boolean setDisplayDateTime(Boolean isView, Long memberId) {
+    public void setDisplayDateTime(Boolean isView, Long memberId) {
         Member member = getMemberOrElseThrow(memberId);
         member.getSetting().setIsViewDateTime(isView);
-        return true;
     }
 
     @Transactional
-    public boolean setAutoUrgent(int auto_urgent_day, Long memberId) {
+    public void setAutoUrgent(int auto_urgent_time, Long memberId) {
         Member member = getMemberOrElseThrow(memberId);
-        member.getSetting().setAutoEmergencySwitch(auto_urgent_day);
-        return true;
+        if (auto_urgent_time < 0){ throw new IllegalArgumentException("auto_urgent_time은 0 혹은 양수여야 합니다.");}
+        member.getSetting().setAutoEmergencySwitch(auto_urgent_time);
     }
 
     public GetSettingResponse getSettingDetail(Long memberId) {
