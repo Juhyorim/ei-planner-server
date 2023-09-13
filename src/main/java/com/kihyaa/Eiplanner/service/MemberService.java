@@ -26,4 +26,9 @@ public class MemberService {
         member.changeNickname(newNickname);
         memberRepository.save(member);
     }
+
+    public void deleteProfileImage(Member member) {
+        member.deleteProfileImg();
+        memberRepository.save(member);
+    }
 }
