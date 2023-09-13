@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -164,6 +165,7 @@ public class TaskServiceTest2 {
 
     List<Long> lst = makeDestinationOrderList(new Long[]{taskId2, taskId1, taskId3, taskId4});
 
+
     taskService.move(taskId1, new TaskMoveRequest(EIType.PENDING, lst), member);
     em.flush(); em.clear();
 
@@ -181,6 +183,10 @@ public class TaskServiceTest2 {
   @Test
   void moveTaskFirstPositionDiffType() {
     make4Task();
+
+    logger.info(() -> {
+      return "@@:" + taskId1 + taskId2 + taskId3 + taskId4;
+    });
 
     List<Long> lst = makeDestinationOrderList(new Long[]{taskId1});
     taskService.move(taskId1, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
@@ -250,6 +256,57 @@ public class TaskServiceTest2 {
     assertEquals(taskId1, imUr.getTasks().get(0).getId());
     assertEquals(taskId3, imUr.getTasks().get(1).getId());
     assertEquals(taskId2, imUr.getTasks().get(2).getId());
+  }
+
+  @DisplayName("일정 이동 시 목적지 배열이 정확하지 않은 경우") //솔직히 prev, 나, next만 줘도 동작할듯
+  @Transactional
+  @Order(7)
+  @Test
+  void moveTaskWithBadRequest() {
+    make4Task();
+
+    List<Long> lst = makeDestinationOrderList(new Long[]{taskId1});
+    taskService.move(taskId1, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
+
+    lst = makeDestinationOrderList(new Long[]{taskId1, taskId2});
+    taskService.move(taskId2, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
+
+    //IM_UR: [1,2]    PENDING: [3,4]
+
+    //자기 자신을 포함하지 않은 경우
+    lst = makeDestinationOrderList(new Long[]{taskId1, taskId2});
+
+    List<Long> finalLst = lst;
+    assertThrows(InputMismatchException.class, () -> {
+      taskService.move(taskId3, new TaskMoveRequest(EIType.IMPORTANT_URGENT, finalLst), member);
+    });
+
+    //앞에 이상한 애 붙어있는 경우
+    lst = makeDestinationOrderList(new Long[]{taskId4, taskId2});
+
+    List<Long> finalLst2 = lst;
+    assertThrows(InputMismatchException.class, () -> {
+      taskService.move(taskId3, new TaskMoveRequest(EIType.IMPORTANT_URGENT, finalLst2), member);
+    });
+
+    //뒤에 이상한 애 붙어있는 경우
+    lst = makeDestinationOrderList(new Long[]{taskId1, taskId4});
+
+    List<Long> finalLst3 = lst;
+    assertThrows(InputMismatchException.class, () -> {
+      taskService.move(taskId3, new TaskMoveRequest(EIType.IMPORTANT_URGENT, finalLst3), member);
+    });
+
+    //배열 길이가 이상할 경우 - 오류 x
+    lst = makeDestinationOrderList(new Long[]{taskId1, taskId2, taskId3});
+    taskService.move(taskId3, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
+
+    lst = makeDestinationOrderList(new Long[]{taskId2, taskId4, taskId3});
+    List<Long> finalLst4 = lst;
+    assertDoesNotThrow(() -> {
+      taskService.move(taskId4, new TaskMoveRequest(EIType.IMPORTANT_URGENT, finalLst4), member);
+    });
+
   }
 
   @DisplayName("일정 조회 테스트")
