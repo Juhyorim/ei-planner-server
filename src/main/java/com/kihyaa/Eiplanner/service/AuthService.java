@@ -1,10 +1,12 @@
 package com.kihyaa.Eiplanner.service;
 
+import com.kihyaa.Eiplanner.domain.LoginType;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Setting;
 import com.kihyaa.Eiplanner.dto.auth.LoginRequest;
 import com.kihyaa.Eiplanner.dto.auth.LoginResponse;
 import com.kihyaa.Eiplanner.dto.auth.RegisterRequest;
+import com.kihyaa.Eiplanner.dto.auth.TokenResponse;
 import com.kihyaa.Eiplanner.exception.MessageCode;
 import com.kihyaa.Eiplanner.exception.exceptions.ConflictException;
 import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
@@ -30,22 +32,17 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     // 회원 가입
-    public String register(RegisterRequest registerRequest) {
+    public String register(RegisterRequest registerRequest, LoginType loginType) {
         validateRegisterRequest(registerRequest);
-
-        Setting setting = buildSetting();
-        Member member = buildMember(registerRequest, setting);
-
+        Member member = registerRequest.toEntity(loginType);
         memberRepository.save(member);
-
-        return createToken(member);
+        return jwtProvider.createToken(member);
     }
 
-    private Setting buildSetting() {
-        return Setting.builder()
-                .isViewDateTime(true)
-                .autoEmergencySwitch(3)
-                .build();
+    // 로그인
+    public String login(LoginRequest loginRequest) {
+        Member member = findValidMember(loginRequest);
+        return jwtProvider.createToken(member);
     }
 
     private void validateRegisterRequest(RegisterRequest request) {
@@ -53,30 +50,10 @@ public class AuthService {
         if (memberRepository.existsByEmail(request.email())) {
             throw new ConflictException(CONFLICT_EMAIL);
         }
-
         // 닉네임 중복 검사
         if (memberRepository.existsByNickname(request.nickname())) {
             throw new ConflictException(CONFLICT_NICKNAME);
         }
-    }
-
-    // 로그인
-    public String login(LoginRequest loginRequest) {
-        Member member = findValidMember(loginRequest);
-        return createToken(member);
-    }
-
-    // Member 객체 생성
-    private Member buildMember(RegisterRequest registerRequest, Setting setting) {
-        String encodedPassword = passwordEncoder.encode(registerRequest.password());
-
-        return Member.builder()
-                .email(registerRequest.email())
-                .nickname(registerRequest.nickname())
-                .profileImgUrl("default.jpg")
-                .password(encodedPassword)
-                .setting(setting)
-                .build();
     }
 
     // 유효한 멤버 찾기
@@ -84,11 +61,6 @@ public class AuthService {
         return memberRepository.findByEmail(loginRequest.email())
                 .filter(member -> passwordEncoder.matches(loginRequest.password(), member.getPassword()))
                 .orElseThrow(() -> new NotFoundException(MessageCode.NOT_FOUND));
-    }
-
-    // 로그인 응답 생성
-    private String createToken(Member member) {
-        return  jwtProvider.createToken(String.format("%s:%s", member.getId(), "MEMBER"));
     }
 
     //회원 탈퇴

@@ -6,5 +6,7 @@ import lombok.Builder;
 import java.net.URL;
 
 @Builder
-public record PresignedResonse(@JsonProperty("profile_image_url") URL ProfileImageUrl) {
+public record PresignedResonse(
+        @JsonProperty("changed_url") String changedUrl,
+        @JsonProperty("presiged_url") URL ProfileImageUrl) {
 }
