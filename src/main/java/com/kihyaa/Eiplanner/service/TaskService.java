@@ -9,7 +9,6 @@ import com.kihyaa.Eiplanner.exception.exceptions.ForbiddenException;
 import com.kihyaa.Eiplanner.exception.exceptions.InternalServerErrorException;
 import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.repository.HistoryRepository;
-import com.kihyaa.Eiplanner.repository.MemberRepository;
 import com.kihyaa.Eiplanner.repository.TaskRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -318,17 +317,18 @@ public class TaskService {
     }
   }
 
-  @Transactional
-  public void scheduleTaskTypeRotation(){
 
-    List<Task> taskNotUrgencyTasks = taskRepository.findNotUrgencyTask(LocalDateTime.now());
 
+  public void scheduleTaskTypeRotation(LocalDateTime now){
+
+    List<Task> taskNotUrgencyTasks = taskRepository.findNotUrgencyTask(now);
     for(Task task : taskNotUrgencyTasks){
-      editToUrgentEiType(task);
+        fetchAndMoveTask(task);
+        editToUrgentEiType(task);
     }
   }
 
-  private void editToUrgentEiType(Task task) {
+  public void editToUrgentEiType(Task task) {
     Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
     urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
     urgencyRotationMap.put(EIType.NOT_IMPORTANT_NOT_URGENT, EIType.NOT_IMPORTANT_URGENT);
@@ -338,4 +338,37 @@ public class TaskService {
       task.setEiType(newEiType);
     }
   }
+
+  public void fetchAndMoveTask(Task task){
+
+      Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
+      urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
+      urgencyRotationMap.put(EIType.NOT_IMPORTANT_NOT_URGENT, EIType.NOT_IMPORTANT_URGENT);
+      List<Task> taskList = new ArrayList<>();
+
+      Optional<Task> t = taskRepository.findByMemberAndEiTypeAndPrevIsNullAndIsHistoryIsFalseAndIsCompletedIsFalse(task.getMember(), urgencyRotationMap.get(task.getEiType()));
+      if(t.isPresent()){
+        taskList = getAllLinkedList(t.get());
+      }
+      taskList.add(task);
+
+      List<Long> taskIds = taskList.stream().map(Task::getId).toList();
+
+      TaskMoveRequest request = new TaskMoveRequest(urgencyRotationMap.get(task.getEiType()), taskIds);
+      move(task.getId(), request, task.getMember());
+
+  }
+
+  private List<Task> getAllLinkedList(Task task){
+    List<Task> taskList = new ArrayList<>();
+
+    while(task.getNext() != null){
+      taskList.add(task);
+      task = task.getNext();
+    }
+    taskList.add(task);
+
+    return taskList;
+  }
+
 }
