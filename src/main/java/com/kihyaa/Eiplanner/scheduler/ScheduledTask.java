@@ -15,11 +15,13 @@ public  class  ScheduledTask {
 
     final private TaskService taskService;
 
-    @Scheduled(cron = "0 0 0/6 * * ?") // 매일 00시를 시작으로 6시간마다 실행
-    public  void  PerformTask () {
+//    @Scheduled(cron = "0 0 0/6 * * ?") // 매일 00시를 시작으로 6시간마다 실행
+    @Scheduled(fixedDelay = 100000)
+    public void PerformTask () {
+
         try {
             log.info( "{}에 스케줄러 실행" , LocalDateTime.now());
-            taskService.scheduleTaskTypeRotation();
+            taskService.scheduleTaskTypeRotation(LocalDateTime.now());
 
         } catch (Exception e) {
             log.error( "Error while task running" , e);
