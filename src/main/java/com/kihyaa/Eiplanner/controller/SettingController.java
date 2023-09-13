@@ -1,3 +1,4 @@
+
 package com.kihyaa.Eiplanner.controller;
 
 import com.kihyaa.Eiplanner.annotation.CurrentMember;
@@ -23,7 +24,7 @@ public class SettingController {
 
     @GetMapping
     public ResponseEntity<GetSettingResponse> getSettingDetail(@CurrentMember Member member) {
-        
+
         return ResponseEntity.ok(settingService.getSettingDetail(member.getId()));
     }
 
@@ -31,7 +32,7 @@ public class SettingController {
     public ResponseEntity<ApiResponse> setViewDateTime(@RequestBody @Valid SetViewDateTimeRequest request,
                                                        @CurrentMember Member member){
 
-        settingService.setDisplayDateTime(request.getDisplay_date_time(), member.getId());
+        settingService.setDisplayDateTime(request.getIs_display_date_time(), member.getId());
 
         return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
     }
