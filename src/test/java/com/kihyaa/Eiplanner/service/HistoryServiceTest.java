@@ -126,36 +126,5 @@ class HistoryServiceTest extends IntegrationTestSupport {
         assertThat(findHistoryList).isEmpty();
     }
 
-    private Member createMember(String testEmail) {
-        return Member.builder()
-                .email(testEmail)
-                .build();
-    }
-
-    private List<Task> createTaskList(Member member) {
-        return List.of(
-                createTask(member, "t1", LocalDateTime.of(2023, 9, 13, 1, 0)),
-                createTask(member, "t2", LocalDateTime.of(2023, 9, 13, 3, 0)),
-                createTask(member, "t3", LocalDateTime.of(2023, 9, 13, 2, 0))
-        );
-    }
-
-    private Task createTask(Member member, String title, LocalDateTime endTime){
-        return Task.builder()
-                .member(member)
-                .title(title)
-                .isHistory(true)
-                .completedAt(endTime)
-                .build();
-    }
-
-    private List<History> createHistoryList(Member member, List<Task> taskList) {
-        List<History> historyList = new ArrayList<>();
-        for (Task task : taskList) {
-            History history = History.makeHistory(member, task);
-            historyList.add(history);
-        }
-        return historyList;
-    }
 
 }

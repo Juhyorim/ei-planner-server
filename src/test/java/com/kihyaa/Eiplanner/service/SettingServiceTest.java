@@ -6,12 +6,9 @@ import com.kihyaa.Eiplanner.domain.Setting;
 import com.kihyaa.Eiplanner.dto.request.SetAutoUrgentRequest;
 import com.kihyaa.Eiplanner.dto.request.SetViewDateTimeRequest;
 import com.kihyaa.Eiplanner.dto.response.GetSettingResponse;
-import com.kihyaa.Eiplanner.repository.MemberRepository;
-import com.kihyaa.Eiplanner.repository.SettingRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -106,19 +103,7 @@ class SettingServiceTest extends IntegrationTestSupport {
         assertThat(member.getSetting().getIsViewDateTime()).isEqualTo(response.getDatetime_display());
     }
 
-    private static Setting createSetting() {
-        return Setting.builder()
-                .isViewDateTime(true)
-                .autoEmergencySwitch(3)
-                .build();
-    }
 
-    private static Member createMember(String testEmail, Setting setting) {
-        return Member.builder()
-                .email(testEmail)
-                .setting(setting)
-                .build();
-    }
 
 
 }
