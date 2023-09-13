@@ -66,6 +66,15 @@ public class SecurityConfig {
         configuration.addAllowedOrigin("http://localhost/");
         configuration.addAllowedOrigin("http://localhost:80");
         configuration.addAllowedOrigin("http://localhost:80/");
+        configuration.addAllowedOrigin("http://localhost:80");
+        configuration.addAllowedOrigin("http://localhost:80/");
+        configuration.addAllowedOrigin("https://api.eiplanner.com/");
+        configuration.addAllowedOrigin("https://api.eiplanner.com");
+        configuration.addAllowedOrigin("http://118.67.128.48/");
+        configuration.addAllowedOrigin("http://118.67.128.48");
+
+
+
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
         configuration.setAllowCredentials(true);
