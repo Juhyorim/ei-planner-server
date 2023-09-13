@@ -32,7 +32,7 @@ public class TaskService {
   public Long makeTask(MakeTaskRequest request, Member member) {
     Task prev = getFirstTaskPending(member);
 
-    LocalDateTime dateTime = validAndEditDateTime(request.getEndAt(), request.getIsTimeInclude());
+    LocalDateTime dateTime = checkAndEditDateTime(request.getEndAt(), request.getIsTimeInclude());
 
     Task task = Task.builder()
       .member(member)
@@ -64,7 +64,7 @@ public class TaskService {
       throw new InternalServerErrorException("일정 배열의 값이 이상합니다. 데이터베이스 이상.. 관리자에게 문의하세요");
   }
 
-  public LocalDateTime validAndEditDateTime(LocalDateTime dateTime, boolean isTimeInclude) {
+  private LocalDateTime checkAndEditDateTime(LocalDateTime dateTime, boolean isTimeInclude) {
     //timeInclude가 false인데 dateTime이 null이 아니면 -> 시간은 쓸모없는거니까 시간부분 초기화
     if (dateTime != null && !isTimeInclude)
       dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
@@ -289,7 +289,7 @@ public class TaskService {
     if (dateTime != null && !request.is_time_include())
       dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
 
-    task.edit(request.getTitle(), request.getDescription(), dateTime, (dateTime != null)? request.is_time_include(): null);
+    task.edit(request.getTitle(), request.getDescription(), dateTime, (dateTime != null)? request.is_time_include(): false);
   }
 
   @Transactional(readOnly = true)
@@ -348,8 +348,6 @@ public class TaskService {
         next.setPrevTask(prev);
     }
   }
-
-
 
   public void scheduleTaskTypeRotation(LocalDateTime now){
 

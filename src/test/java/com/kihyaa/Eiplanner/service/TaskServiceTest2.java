@@ -5,9 +5,7 @@ import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Setting;
 import com.kihyaa.Eiplanner.domain.Task;
 import com.kihyaa.Eiplanner.dto.*;
-import com.kihyaa.Eiplanner.dto.response.GetHistoryResponse;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
-import com.kihyaa.Eiplanner.repository.SettingRepository;
 import com.kihyaa.Eiplanner.repository.TaskRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.*;
@@ -18,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
@@ -79,32 +78,52 @@ public class TaskServiceTest2 {
   void makeTask() {
     make4Task();
 
-    Task task = taskRepository.findById(taskId1).orElseThrow(() -> new NoSuchElementException());
+    //@TODO 시간 있을 때 없을 때
+    Task task1 = taskRepository.findById(taskId1).orElseThrow(() -> new NoSuchElementException());
 
-    assertEquals(title, task.getTitle());
-    assertEquals(member.getId(), task.getMember().getId());
-    assertEquals(description, task.getDescription());
-    assertEquals(null, task.getEndAt());
-    assertEquals(false, task.getIsTimeInclude());
-    assertEquals(EIType.PENDING, task.getEiType());
-    assertEquals(null, task.getCompletedAt());
-    assertEquals(false, task.getIsCompleted());
+    //title빼고 다 null일 때
+    assertEquals(title, task1.getTitle());
+    assertEquals(member.getId(), task1.getMember().getId());
+    assertEquals(null, task1.getDescription());
+    assertEquals(null, task1.getEndAt());
+    assertEquals(false, task1.getIsTimeInclude());
+    assertEquals(EIType.PENDING, task1.getEiType());
+    assertEquals(null, task1.getCompletedAt());
+    assertEquals(false, task1.getIsCompleted());
 
+    //description이 null이 아닐 때
     Task task2 = taskRepository.findById(taskId2).orElseThrow(() -> new NoSuchElementException());
+    assertEquals(description, task2.getDescription());
+    assertEquals(false, task2.getIsTimeInclude());
+
+    //isTimeInclude가 false일 때
+    Task task3 = taskRepository.findById(taskId3).orElseThrow(() -> new NoSuchElementException());
+    assertEquals(0, task3.getEndAt().getHour());
+    assertEquals(0, task3.getEndAt().getMinute());
+    assertEquals(0, task3.getEndAt().getSecond());
+    assertEquals(0, task3.getEndAt().getNano());
+    assertEquals(false, task3.getIsTimeInclude());
+
+    Task task4 = taskRepository.findById(taskId4).orElseThrow(() -> new NoSuchElementException());
+    assertEquals(true, task4.getIsTimeInclude());
+
     //연결고리 확인
-    assertEquals(taskId2, task.getNext().getId());
-    assertEquals(null, task.getPrev());
+    assertEquals(taskId2, task1.getNext().getId());
+    assertEquals(null, task1.getPrev());
     assertEquals(taskId1, task2.getPrev().getId());
     assertEquals(taskId3, task2.getNext().getId());
   }
 
   private void make4Task() {
-    MakeTaskRequest makeTaskRequest = new MakeTaskRequest(title, description, null, false);
+    MakeTaskRequest makeTaskRequest1 = new MakeTaskRequest(title, null, null, false);
+    MakeTaskRequest makeTaskRequest2 = new MakeTaskRequest(title, description, null, true);
+    MakeTaskRequest makeTaskRequest3 = new MakeTaskRequest(title, description, LocalDateTime.now(), false);
+    MakeTaskRequest makeTaskRequest4 = new MakeTaskRequest(title, description, LocalDateTime.now(), true);
 
-    taskId1 = taskService.makeTask(makeTaskRequest, member);
-    taskId2 = taskService.makeTask(makeTaskRequest, member);
-    taskId3 = taskService.makeTask(makeTaskRequest, member);
-    taskId4 = taskService.makeTask(makeTaskRequest, member);
+    taskId1 = taskService.makeTask(makeTaskRequest1, member);
+    taskId2 = taskService.makeTask(makeTaskRequest2, member);
+    taskId3 = taskService.makeTask(makeTaskRequest3, member);
+    taskId4 = taskService.makeTask(makeTaskRequest4, member);
   }
 
   @DisplayName("일정 같은 타입으로 이동: 가장 상위")
@@ -183,10 +202,6 @@ public class TaskServiceTest2 {
   @Test
   void moveTaskFirstPositionDiffType() {
     make4Task();
-
-    logger.info(() -> {
-      return "@@:" + taskId1 + taskId2 + taskId3 + taskId4;
-    });
 
     List<Long> lst = makeDestinationOrderList(new Long[]{taskId1});
     taskService.move(taskId1, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
@@ -315,7 +330,7 @@ public class TaskServiceTest2 {
   @Test
   void getAllTask() {
     make4Task();
-
+    //@TODO 시간 있을 때 없을 때 조회
     List<Long> lst = makeDestinationOrderList(new Long[]{taskId1});
     taskService.move(taskId1, new TaskMoveRequest(EIType.NOT_IMPORTANT_NOT_URGENT, lst), member);
 
@@ -395,11 +410,121 @@ public class TaskServiceTest2 {
   }
 
   //일정 삭제 테스트-첫 번째 위치
+  @DisplayName("일정 삭제 테스트: 첫 번째 위치")
+  @Transactional
+  @Order(11)
+  @Test
+  void deleteFirstPos() {
+    make4Task();
 
-  //일정 삭제 테스트-마지막 위치
+    taskService.delete(taskId1, member);
+
+    List<TaskResponse> tasks = taskService.getAllTask(member).getPending().getTasks();
+    assertEquals(3, tasks.size());
+    for (TaskResponse response: tasks)
+      assertNotEquals(taskId1, response.getId());
+
+    taskService.delete(taskId2, member);
+    taskService.delete(taskId3, member);
+    taskService.delete(taskId4, member);
+
+    tasks = taskService.getAllTask(member).getPending().getTasks();
+    assertEquals(0, tasks.size());
+  }
+
+  @DisplayName("일정 삭제 테스트: 마지막 위치")
+  @Transactional
+  @Order(11)
+  @Test
+  void deleteLastPos() {
+    make4Task();
+
+    taskService.delete(taskId4, member);
+
+    List<TaskResponse> tasks = taskService.getAllTask(member).getPending().getTasks();
+    assertEquals(3, tasks.size());
+    for (TaskResponse response: tasks)
+      assertNotEquals(taskId4, response.getId());
+
+    taskService.delete(taskId3, member);
+    taskService.delete(taskId2, member);
+    taskService.delete(taskId1, member);
+
+    tasks = taskService.getAllTask(member).getPending().getTasks();
+    assertEquals(0, tasks.size());
+  }
 
   //일정 삭제 테스트-중간 위치
+  @DisplayName("일정 삭제 테스트: 중간 위치")
+  @Transactional
+  @Order(11)
+  @Test
+  void deleteCenterPos() {
+    make4Task();
 
+    taskService.delete(taskId2, member);
 
+    List<TaskResponse> tasks = taskService.getAllTask(member).getPending().getTasks();
+    assertEquals(3, tasks.size());
+    for (TaskResponse response: tasks)
+      assertNotEquals(taskId2, response.getId());
+
+    taskService.delete(taskId3, member);
+    tasks = taskService.getAllTask(member).getPending().getTasks();
+    assertEquals(2, tasks.size());
+    for (TaskResponse response: tasks)
+      assertNotEquals(taskId3, response.getId());
+
+    taskService.delete(taskId4, member);
+    taskService.delete(taskId1, member);
+
+    tasks = taskService.getAllTask(member).getPending().getTasks();
+    assertEquals(0, tasks.size());
+  }
+
+  //일정 내용 수정 테스트
+  @DisplayName("일정 내용 수정 테스트")
+  @Transactional
+  @Order(12)
+  @Test
+  void editTaskDetail() throws InterruptedException {
+    make4Task();
+
+    Thread.sleep(1000);
+
+    LocalDateTime endTime = LocalDateTime.now();
+
+    taskService.edit(taskId1, new TaskEditRequest("바꾼제목", null, null, false));
+    taskService.edit(taskId2, new TaskEditRequest("바꾼제목", "바꾼설명", null, true));
+    taskService.edit(taskId3, new TaskEditRequest("바꾼제목", "바꾼설명", endTime, false));
+    taskService.edit(taskId4, new TaskEditRequest("바꾼제목", "바꾼설명", endTime, true));
+
+    List<TaskResponse> tasks = taskService.getAllTask(member).getPending().getTasks();
+
+    for (TaskResponse response: tasks) {
+
+      if (response.getId() == taskId1) {
+        assertEquals("바꾼제목", response.getTitle());
+        assertNull(response.getDescription());
+        assertNull(response.getEndAt());
+        assertEquals(false, response.getIsTimeInclude());
+      } else if (response.getId() == taskId2) {
+        assertEquals("바꾼제목", response.getTitle());
+        assertEquals("바꾼설명", response.getDescription());
+        assertNull(response.getEndAt());
+        assertEquals(false, response.getIsTimeInclude());
+      } else if (response.getId() == taskId2) {
+        assertEquals("바꾼제목", response.getTitle());
+        assertEquals("바꾼설명", response.getDescription());
+        assertEquals(endTime, response.getEndAt().withHour(0).withMinute(0).withSecond(0).withNano(0));
+        assertEquals(false, response.getIsTimeInclude());
+      } else if (response.getId() == taskId2) {
+        assertEquals("바꾼제목", response.getTitle());
+        assertEquals("바꾼설명", response.getDescription());
+        assertEquals(endTime, response.getEndAt());
+        assertEquals(true, response.getIsTimeInclude());
+      }
+    }
+  }
 
 }
