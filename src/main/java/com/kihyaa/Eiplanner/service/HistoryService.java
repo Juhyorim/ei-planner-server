@@ -1,5 +1,6 @@
 package com.kihyaa.Eiplanner.service;
 
+import com.kihyaa.Eiplanner.domain.Task;
 import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.domain.History;
 import com.kihyaa.Eiplanner.dto.response.GetHistoryResponse;
@@ -26,7 +27,7 @@ public class HistoryService {
     public GetHistoryResponse getHistory(Long memberId, Pageable pageable) {
         validateMemberExists(memberId);
 
-        Page<History> historyPage = historyRepository.findCompletedTasksByMemberId(memberId, pageable);
+        Page<History> historyPage = historyRepository.findIsHistoryTasksByMemberId(memberId, pageable);
 
         List<HistoryTaskDto> historyTasks = historyPage.getContent().stream()
                 .map(history -> HistoryTaskDto.of(history.getTask())).toList();
@@ -35,10 +36,10 @@ public class HistoryService {
     }
 
     @Transactional
-    public boolean deleteOneHistory(Long taskId, Long memberId) {
+    public void deleteOneHistory(Long taskId, Long memberId) {
         validateMemberExists(memberId);
 
-        Optional<History> historyOpt = historyRepository.findById(taskId);
+        Optional<History> historyOpt = historyRepository.findByTaskId(taskId);
 
         if(historyOpt.isEmpty()) {
             throw new NotFoundException("요청한 히스토리가 존재하지 않습니다.");
@@ -48,15 +49,13 @@ public class HistoryService {
             throw new NotFoundException("본인 히스토리만 삭제할 수 있습니다.");
         }
 
-        historyRepository.deleteByTaskId(taskId);
-        return true;
+        historyRepository.deleteByTaskId(historyOpt.get().getTask().getId());
     }
 
     @Transactional
-    public boolean deleteAllHistory(Long memberId) {
+    public void deleteAllHistory(Long memberId) {
         validateMemberExists(memberId);
         historyRepository.deleteAllByMemberId(memberId);
-        return true;
     }
 
 
