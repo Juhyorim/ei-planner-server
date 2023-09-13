@@ -2,6 +2,7 @@ package com.kihyaa.Eiplanner.controller;
 
 import com.kihyaa.Eiplanner.annotation.CurrentMember;
 import com.kihyaa.Eiplanner.domain.Member;
+import com.kihyaa.Eiplanner.dto.auth.LoginResponse;
 import com.kihyaa.Eiplanner.exception.MessageCode;
 import com.kihyaa.Eiplanner.dto.auth.LoginRequest;
 import com.kihyaa.Eiplanner.dto.auth.RegisterRequest;
@@ -28,20 +29,24 @@ public class AuthController {
     private String frontendUrl;
 
     @PostMapping("/register")
-    public void register(@Valid @RequestBody RegisterRequest registerRequest,  HttpServletResponse response) throws IOException {
+    public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest registerRequest,  HttpServletResponse response) throws IOException {
 
         String token = authService.register(registerRequest);
-        String redirectUrl = frontendUrl + "?token=" + token;
+//        String redirectUrl = frontendUrl + "?token=" + token;
         log.info("일반 회원가입 token = {}", token);
-        response.sendRedirect(redirectUrl);
+
+        return ResponseEntity.ok(LoginResponse.builder().token(token).build());
+//        response.sendRedirect(redirectUrl);
     }
 
     @PostMapping("/login")
-    public void login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) throws IOException {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) throws IOException {
         String token = authService.login(loginRequest);
-        String redirectUrl = frontendUrl + "?token=" + token;
+//        String redirectUrl = frontendUrl + "?token=" + token;
         log.info("일반 로그인 token = {}", token);
-        response.sendRedirect(redirectUrl);
+
+        return ResponseEntity.ok(LoginResponse.builder().token(token).build());
+//        response.sendRedirect(redirectUrl);
     }
 
     @DeleteMapping("/delete")
