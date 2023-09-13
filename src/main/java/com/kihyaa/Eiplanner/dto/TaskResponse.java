@@ -1,6 +1,7 @@
 package com.kihyaa.Eiplanner.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kihyaa.Eiplanner.domain.EIType;
 import com.kihyaa.Eiplanner.domain.Task;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +26,9 @@ public class TaskResponse {
   private Boolean isTimeInclude;
   @JsonProperty("is_completed")
   private Boolean isCompleted;
+
+  @JsonProperty("ei_type")
+  private EIType eiType;
 
   public static List<TaskResponse> convert(List<Task> taskList, boolean isViewDateTime) {
     List<TaskResponse> responses = new ArrayList<>();

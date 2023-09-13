@@ -276,6 +276,7 @@ public class TaskService {
       .endAt(task.getEndAt())
       .isTimeInclude(task.getIsTimeInclude())
       .isCompleted(task.getIsCompleted())
+      .eiType(task.getEiType())
       .build();
   }
 

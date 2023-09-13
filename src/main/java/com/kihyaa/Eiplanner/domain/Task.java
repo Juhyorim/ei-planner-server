@@ -54,13 +54,15 @@ public class Task {
     private Boolean isHistory = false;
 
     @Builder
-    public Task(Member member, String title, String description, LocalDateTime endAt, boolean isTimeInclude, Task prev) {
+    public Task(Member member, String title, String description, LocalDateTime endAt, boolean isTimeInclude, Task prev, Boolean isHistory, LocalDateTime completedAt) {
         this.member = member;
         this.title = title;
         this.description = description;
         this.endAt = endAt;
         this.isTimeInclude = isTimeInclude;
         this.prev = prev;
+        this.isHistory = isHistory;
+        this.completedAt = completedAt;
     }
 
     public void setNextTask(Task task) {
