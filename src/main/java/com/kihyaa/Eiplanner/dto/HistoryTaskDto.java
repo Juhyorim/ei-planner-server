@@ -14,7 +14,7 @@ public class HistoryTaskDto {
     private String title;
     private String description;
     private LocalDateTime end_at;
-    private Boolean isTimeInclude;
+    private Boolean is_time_include;
     private LocalDateTime completed_at;
 
     public static HistoryTaskDto of(Task task) {
