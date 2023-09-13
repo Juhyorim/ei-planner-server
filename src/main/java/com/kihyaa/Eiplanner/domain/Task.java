@@ -44,12 +44,12 @@ public class Task {
     private LocalDateTime completedAt = null;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="next_task_id") //@TODO BuilderDefault 적요앙ㄴ해도 되는지 확인
+    @JoinColumn(name="next_task_id")
     private Task next = null;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="prev_task_id") //@TODO BuilderDefault 적요앙ㄴ해도 되는지 확인
-    private Task prev = null; //@TODO 삭제할 때 꼭 고려
+    @JoinColumn(name="prev_task_id")
+    private Task prev = null;
 
     private Boolean isHistory = false;
 

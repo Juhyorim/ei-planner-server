@@ -78,7 +78,6 @@ public class TaskServiceTest2 {
   void makeTask() {
     make4Task();
 
-    //@TODO 시간 있을 때 없을 때
     Task task1 = taskRepository.findById(taskId1).orElseThrow(() -> new NoSuchElementException());
 
     //title빼고 다 null일 때
@@ -124,6 +123,37 @@ public class TaskServiceTest2 {
     taskId2 = taskService.makeTask(makeTaskRequest2, member);
     taskId3 = taskService.makeTask(makeTaskRequest3, member);
     taskId4 = taskService.makeTask(makeTaskRequest4, member);
+  }
+
+  @DisplayName("일정 사분면 이동 테스트")
+  @Transactional
+  @Order(2)
+  @Test
+  void moveTask() {
+    make4Task();
+
+    List<Long> lst = makeDestinationOrderList(new Long[]{taskId1});
+
+    taskService.move(taskId1, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
+    TaskResponse info = taskService.getInfo(taskId1, member);
+    assertEquals(EIType.IMPORTANT_URGENT, info.getEiType());
+
+    taskService.move(taskId1, new TaskMoveRequest(EIType.IMPORTANT_NOT_URGENT, lst), member);
+    info = taskService.getInfo(taskId1, member);
+    assertEquals(EIType.IMPORTANT_NOT_URGENT, info.getEiType());
+
+    taskService.move(taskId1, new TaskMoveRequest(EIType.NOT_IMPORTANT_URGENT, lst), member);
+    info = taskService.getInfo(taskId1, member);
+    assertEquals(EIType.NOT_IMPORTANT_URGENT, info.getEiType());
+
+    taskService.move(taskId1, new TaskMoveRequest(EIType.NOT_IMPORTANT_NOT_URGENT, lst), member);
+    info = taskService.getInfo(taskId1, member);
+    assertEquals(EIType.NOT_IMPORTANT_NOT_URGENT, info.getEiType());
+
+    lst = makeDestinationOrderList(new Long[]{taskId1, taskId2, taskId3, taskId4});
+    taskService.move(taskId1, new TaskMoveRequest(EIType.PENDING, lst), member);
+    info = taskService.getInfo(taskId1, member);
+    assertEquals(EIType.PENDING, info.getEiType());
   }
 
   @DisplayName("일정 같은 타입으로 이동: 가장 상위")
@@ -526,5 +556,6 @@ public class TaskServiceTest2 {
       }
     }
   }
+
 
 }

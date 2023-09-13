@@ -8,10 +8,12 @@ import com.kihyaa.Eiplanner.exception.MessageCode;
 import com.kihyaa.Eiplanner.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/tasks")
 @RestController
