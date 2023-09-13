@@ -41,6 +41,7 @@ public class TaskResponse {
           .endAt(isViewDateTime? task.getEndAt() : null)
           .isTimeInclude(task.getIsTimeInclude())
           .isCompleted(task.getIsCompleted())
+          .eiType(task.getEiType())
           .build()
       );
     }

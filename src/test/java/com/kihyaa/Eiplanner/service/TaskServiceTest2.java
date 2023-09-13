@@ -380,7 +380,6 @@ public class TaskServiceTest2 {
     assertEquals(taskId2, notImportantNotUrgent.getTasks().get(1).getId());
   }
 
-  //일정 정리하기 테스트
   @DisplayName("일정 완료 테스트")
   @Transactional
   @Order(9)
@@ -411,7 +410,6 @@ public class TaskServiceTest2 {
     assertEquals(false, task3.getIsHistory());
   }
 
-  //일정 정리하기 테스트
   @DisplayName("일정 정리하기 테스트")
   @Transactional
   @Order(10)
@@ -439,7 +437,6 @@ public class TaskServiceTest2 {
     assertEquals(taskId3, historys.get(0).getId());
   }
 
-  //일정 삭제 테스트-첫 번째 위치
   @DisplayName("일정 삭제 테스트: 첫 번째 위치")
   @Transactional
   @Order(11)
@@ -484,7 +481,6 @@ public class TaskServiceTest2 {
     assertEquals(0, tasks.size());
   }
 
-  //일정 삭제 테스트-중간 위치
   @DisplayName("일정 삭제 테스트: 중간 위치")
   @Transactional
   @Order(11)
@@ -512,7 +508,6 @@ public class TaskServiceTest2 {
     assertEquals(0, tasks.size());
   }
 
-  //일정 내용 수정 테스트
   @DisplayName("일정 내용 수정 테스트")
   @Transactional
   @Order(12)
