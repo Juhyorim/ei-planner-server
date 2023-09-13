@@ -32,7 +32,7 @@ public class AuthController {
 
         String token = authService.register(registerRequest);
         String redirectUrl = frontendUrl + "?token=" + token;
-        log.info("token = {}", token);
+        log.info("일반 회원가입 token = {}", token);
         response.sendRedirect(redirectUrl);
     }
 
@@ -40,7 +40,7 @@ public class AuthController {
     public void login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) throws IOException {
         String token = authService.login(loginRequest);
         String redirectUrl = frontendUrl + "?token=" + token;
-        log.info("token = {}", token);
+        log.info("일반 로그인 token = {}", token);
         response.sendRedirect(redirectUrl);
     }
 

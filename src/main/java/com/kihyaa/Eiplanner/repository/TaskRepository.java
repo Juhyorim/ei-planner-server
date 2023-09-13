@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
@@ -32,4 +33,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
           "AND t.is_completed = false ",
           nativeQuery = true)
   List<Task> findNotUrgencyTask(@Param("localDateTime") LocalDateTime localDateTime);
+
+  Optional<Task> findByMemberAndEiTypeAndPrevIsNullAndIsHistoryIsFalseAndIsCompletedIsFalse(Member member, EIType eiType);
 }

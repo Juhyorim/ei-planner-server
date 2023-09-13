@@ -8,6 +8,7 @@ import lombok.*;
 @Getter @Setter
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor
+@Builder
 public class History {
 
     @Id
@@ -29,7 +30,6 @@ public class History {
 
         task.sendHistory();
     }
-
     public static History makeHistory(Member member, Task task) {
         History history = new History(null, member, task);
         task.sendHistory();

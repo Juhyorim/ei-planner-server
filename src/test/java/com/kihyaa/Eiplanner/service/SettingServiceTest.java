@@ -19,16 +19,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Transactional
 class SettingServiceTest extends IntegrationTestSupport {
-
-    @Autowired
-    private SettingService settingservice;
-
-    @Autowired
-    private MemberRepository memberRepository;
-
-    @Autowired
-    private SettingRepository settingRepository;
-
     private final String testEmail = "testUser@gmail.com";
 
     @DisplayName("요청 받은 Boolean 값으로 시간 및 날짜 보기 설정를 변경할 수 있다.")
