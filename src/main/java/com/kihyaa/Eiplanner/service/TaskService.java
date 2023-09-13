@@ -88,20 +88,20 @@ public class TaskService {
 
     int i =0;
     while(i < taskList.size()) {
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.PENDING) {
-        listPENDING.add(taskList.get(i)); i++;
+      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.IMPORTANT_NOT_URGENT) {
+        listIMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;log.info("IMPORTANT_NOT_URGENT");
       }
       while (i < taskList.size() && taskList.get(i).getEiType() == EIType.IMPORTANT_URGENT) {
-        listIMPORTANT_URGENT.add(taskList.get(i)); i++;
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.IMPORTANT_NOT_URGENT) {
-        listIMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.NOT_IMPORTANT_URGENT){
-        listNOT_IMPORTANT_URGENT.add(taskList.get(i)); i++;
+        listIMPORTANT_URGENT.add(taskList.get(i)); i++;log.info("IMPORTANT_URGENT");
       }
       while (i < taskList.size() && taskList.get(i).getEiType() == EIType.NOT_IMPORTANT_NOT_URGENT) {
-        listNOT_IMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;
+        listNOT_IMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;log.info("NOT_IMPORTANT_NOT_URGENT");
+      }
+      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.NOT_IMPORTANT_URGENT){
+        listNOT_IMPORTANT_URGENT.add(taskList.get(i)); i++;log.info("NOT_IMPORTANT_URGENT");
+      }
+      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.PENDING) {
+        listPENDING.add(taskList.get(i)); i++;
       }
     }
 
@@ -164,7 +164,7 @@ public class TaskService {
 
     //내가 없으면 - InputMismatchException
     if (idx == -1)
-      throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+      throw new InputMismatchException("입력받은 일정 배열이 이상합니다1");
 
     Task futurePrev = null;
     Task futureNext = null;
@@ -181,25 +181,25 @@ public class TaskService {
       //타입에 맞는 모든 task 가져옴
       List<Task> typeList = taskRepository.findByMemberAndEiTypeAndIsHistoryIsFalse(member, taskList.getEi_type());
       if (typeList.size() != 0)
-        throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+        throw new InputMismatchException("입력받은 일정 배열이 이상합니다2");
     }
 
     //(2)prev가 없는 경우 next의 prev가 진짜 없나
     if (idx == 0 && tasks.size() > 1) {
       if (futureNext.getPrev() != null)
-        throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+        throw new InputMismatchException("입력받은 일정 배열이 이상합니다3");
     }
 
     //(3)next가 없는 경우 prev의 next가 진짜 없나
     if (idx == tasks.size()-1 && tasks.size() > 1) {
       if (futurePrev.getNext() != null)
-        throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+        throw new InputMismatchException("입력받은 일정 배열이 이상합니다4");
     }
 
     //(4)다 있는 경우 둘이 연결되어있나
     if (idx > 0 && idx < tasks.size()-1) {
       if (futurePrev.getId()!= futureNext.getPrev().getId())
-        throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+        throw new InputMismatchException("입력받은 일정 배열이 이상합니다5");
     }
 
     Task pastPrev = findTask.getPrev();
@@ -244,14 +244,13 @@ public class TaskService {
   }
 
   private static int findTaskIdx(Task findTask, List<Long> tasks) {
-    int idx = -1;
     //나 찾기
     for (int i = 0; i< tasks.size(); i++) {
-      if (tasks.get(i) == findTask.getId()) {
-        idx = i; break;
+      if (tasks.get(i).equals(findTask.getId())) {
+        return i;
       }
     }
-    return idx;
+    return -1;
   }
 
   public void delete(Long taskId, Member member) {
