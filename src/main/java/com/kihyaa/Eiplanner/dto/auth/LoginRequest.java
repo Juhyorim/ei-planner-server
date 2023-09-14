@@ -11,7 +11,7 @@ public record LoginRequest(
         String password) {
 
         public static LoginRequest of(String email) {
-                return new LoginRequest(email, null);
+                return new LoginRequest(email, " ");
         }
 
 }

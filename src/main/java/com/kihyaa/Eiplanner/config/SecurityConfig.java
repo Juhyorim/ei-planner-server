@@ -41,7 +41,8 @@ public class SecurityConfig {
                             "/api/v1/auth/delete",
                             "/api/v1/history/**",
                             "/api/v1/tasks/**",
-                            "/api/v1/settings/**"
+                            "/api/v1/settings/**",
+                            "/api/v1/member/**"
                     ).authenticated();
 
                     Requests.anyRequest().permitAll();
