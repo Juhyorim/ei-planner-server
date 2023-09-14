@@ -177,39 +177,51 @@ public class TaskService {
         throw new InputMismatchException("입력받은 일정 배열이 이상합니다5");
     }
 
+    //검증완료, 연결리스트 연결작업 수행 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
     Task pastPrev = findTask.getPrev();
     Task pastNext = findTask.getNext();
 
     findTask.setPrevTask(null);
     findTask.setNextTask(null);
 
+    if (futurePrev != null)
+      futurePrev.setNextTask(null);
+    if (futureNext != null)
+      futureNext.setPrevTask(null);
+
+    if (pastPrev != null)
+      pastPrev.setNextTask(null);
+    if (pastNext != null)
+      pastNext.setPrevTask(null);
+
+    em.flush();
+    em.clear();
+
+    findTask = taskRepository.findById(taskId)
+      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+
+    //이전꺼끼리 연결
+    if(pastPrev != null)
+      pastPrev = taskRepository.findById(pastPrev.getId()).orElseThrow(() -> new NotFoundException("asdf"));
+    if(pastNext != null)
+      pastNext = taskRepository.findById(pastNext.getId()).orElseThrow(() -> new NotFoundException("asdf"));
+
     connectTask(pastPrev, pastNext);
 
-    em.flush();
-    em.clear();
-
-    findTask = taskRepository.findById(taskId)
-      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
-
-    findTask.setEiType(taskList.getEi_type());
-
-    if (idx-1 >= 0)
-      futurePrev = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
-
-    if (idx+1 <tasks.size())
-      futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
-
     //future끼리 연결
-    if (futurePrev != null)
+    if (futurePrev != null) {
+      futurePrev = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
       futurePrev.setNextTask(findTask);
-    if (futureNext != null)
+    }
+
+    if (futureNext != null) {
+      futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
       futureNext.setPrevTask(findTask);
+    }
 
-    em.flush();
-    em.clear();
-
-    findTask = taskRepository.findById(taskId)
-      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+    //findTask 연결, 타입수정
+    findTask.setEiType(taskList.getEi_type());
 
     findTask.setPrevTask(futurePrev);
     findTask.setNextTask(futureNext);

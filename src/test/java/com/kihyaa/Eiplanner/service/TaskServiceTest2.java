@@ -354,6 +354,88 @@ public class TaskServiceTest2 {
 
   }
 
+  @DisplayName("일정 상위에서 이동")
+  @Transactional
+  @Order(8)
+  @Test
+  void moveTaskFromFirst() {
+    make4Task();
+
+    List<Long> lst = makeDestinationOrderList(new Long[]{taskId1});
+
+    logger.info(() -> {
+      return "@@: "+ taskId1+ taskId2 + taskId3 + taskId4;
+    });
+
+    taskService.move(taskId1, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
+
+    DashBoardResponse allTask = taskService.getAllTask(member);
+    List<TaskResponse> pending = allTask.getPending().getTasks();
+    List<TaskResponse> im_ur = allTask.getImportant_urgent().getTasks();
+
+
+    assertEquals(taskId2, pending.get(0).getId());
+    assertEquals(taskId3, pending.get(1).getId());
+    assertEquals(taskId4, pending.get(2).getId());
+
+    assertEquals(taskId1, im_ur.get(0).getId());
+  }
+
+  @DisplayName("일정 중간에서 이동")
+  @Transactional
+  @Order(8)
+  @Test
+  void moveTaskFromCenter() {
+    make4Task();
+
+    List<Long> lst = makeDestinationOrderList(new Long[]{taskId3});
+
+    logger.info(() -> {
+      return "@@: "+ taskId1+ taskId2 + taskId3 + taskId4;
+    });
+
+    taskService.move(taskId3, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
+
+    DashBoardResponse allTask = taskService.getAllTask(member);
+    List<TaskResponse> pending = allTask.getPending().getTasks();
+    List<TaskResponse> im_ur = allTask.getImportant_urgent().getTasks();
+
+
+    assertEquals(taskId1, pending.get(0).getId());
+    assertEquals(taskId2, pending.get(1).getId());
+    assertEquals(taskId4, pending.get(2).getId());
+
+    assertEquals(taskId3, im_ur.get(0).getId());
+  }
+
+  @DisplayName("일정 하위에서 이동")
+  @Transactional
+  @Order(8)
+  @Test
+  void moveTaskFromLast() {
+    make4Task();
+
+    List<Long> lst = makeDestinationOrderList(new Long[]{taskId4});
+
+    logger.info(() -> {
+      return "@@: "+ taskId1+ taskId2 + taskId3 + taskId4;
+    });
+
+    taskService.move(taskId4, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
+
+    DashBoardResponse allTask = taskService.getAllTask(member);
+    List<TaskResponse> pending = allTask.getPending().getTasks();
+    List<TaskResponse> im_ur = allTask.getImportant_urgent().getTasks();
+
+
+    assertEquals(taskId1, pending.get(0).getId());
+    assertEquals(taskId2, pending.get(1).getId());
+    assertEquals(taskId3, pending.get(2).getId());
+
+    assertEquals(taskId4, im_ur.get(0).getId());
+  }
+
+
   @DisplayName("일정 조회 테스트")
   @Transactional
   @Order(8)
