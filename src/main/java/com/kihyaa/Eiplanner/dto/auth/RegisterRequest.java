@@ -23,11 +23,11 @@ public record RegisterRequest(
                 return new RegisterRequest(nickname, email, password);
         }
 
-        public Member toEntity(LoginType loginType) {
+        public Member toEntity(String password, LoginType loginType) {
                 return Member.builder()
                         .nickname(this.nickname)
                         .email(this.email)
-                        .password(this.password)
+                        .password(password)
                         .setting(Setting.defaultSetting())
                         .loginType(loginType)
                         .build();

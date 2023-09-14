@@ -10,8 +10,10 @@ public record LoginRequest(
         @Schema(example = "testpassword")
         String password) {
 
-        public static LoginRequest of(String email) {
-                return new LoginRequest(email, " ");
+        public static LoginRequest of(String email, String password) {
+                return LoginRequest.builder()
+                        .password(password)
+                        .email(email)
+                        .build();
         }
-
 }
