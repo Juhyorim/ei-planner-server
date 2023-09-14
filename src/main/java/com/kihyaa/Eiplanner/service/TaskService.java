@@ -41,7 +41,7 @@ public class TaskService {
       .endAt((dateTime != null) ? dateTime: null)
       .isTimeInclude((dateTime != null)? request.getIsTimeInclude(): false) //dateTime이 안들어오면 timeInclude는 false여야함
       .build();
-    
+
     //prev와 연결
     connectTask(prev, task);
 
@@ -77,7 +77,7 @@ public class TaskService {
     List<Task> taskList = taskRepository.findByMemberAndIsHistoryIsFalseOrderByEiType(member);
 
     Map<EIType, List<Task>> taskMap = new HashMap<>();
-    
+
     //task type별로 해시에 넣기
     for (EIType type: EIType.values())
       taskMap.put(type, new ArrayList<>());
@@ -285,7 +285,7 @@ public class TaskService {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-    if (task.getMember().getId() != member.getId()) {
+    if (task.getMember().getId().equals(member.getId())) {
       throw new ForbiddenException("일정에 대한 조회 권한이 없습니다");
     }
 
@@ -341,8 +341,8 @@ public class TaskService {
 
     List<Task> taskNotUrgencyTasks = taskRepository.findNotUrgencyTask(now);
     for(Task task : taskNotUrgencyTasks){
-        fetchAndMoveTask(task);
-        editToUrgentEiType(task);
+      fetchAndMoveTask(task);
+      editToUrgentEiType(task);
     }
   }
 
@@ -358,24 +358,25 @@ public class TaskService {
     }
   }
 
-  @Transactional
   public void fetchAndMoveTask(Task task){
 
-      Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
-      urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
-      urgencyRotationMap.put(EIType.NOT_IMPORTANT_NOT_URGENT, EIType.NOT_IMPORTANT_URGENT);
-      List<Task> taskList = new ArrayList<>();
+    Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
+    urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
+    urgencyRotationMap.put(EIType.NOT_IMPORTANT_NOT_URGENT, EIType.NOT_IMPORTANT_URGENT);
+    List<Task> taskList = new ArrayList<>();
 
-      Optional<Task> t = taskRepository.findByMemberAndEiTypeAndPrevIsNullAndIsHistoryIsFalseAndIsCompletedIsFalse(task.getMember(), urgencyRotationMap.get(task.getEiType()));
-      if(t.isPresent()){
-        taskList = getAllLinkedList(t.get());
-      }
-      taskList.add(task);
+    Optional<Task> t = taskRepository.findByMemberAndEiTypeAndPrevIsNullAndIsHistoryIsFalseAndIsCompletedIsFalse(task.getMember(), urgencyRotationMap.get(task.getEiType()));
 
-      List<Long> taskIds = taskList.stream().map(Task::getId).toList();
+    if(t.isPresent()){
+      taskList = getAllLinkedList(t.get());
+    }
+    taskList.add(task);
 
-      TaskMoveRequest request = new TaskMoveRequest(urgencyRotationMap.get(task.getEiType()), taskIds);
-      move(task.getId(), request, task.getMember());
+    List<Long> taskIds = taskList.stream().map(Task::getId).toList();
+
+    TaskMoveRequest request = new TaskMoveRequest(urgencyRotationMap.get(task.getEiType()), taskIds);
+
+    move(task.getId(), request, task.getMember());
 
   }
 

@@ -53,6 +53,22 @@ public class Task {
 
     private Boolean isHistory = false;
 
+    public Task(Member member, String title, boolean isHistory, LocalDateTime completedAt) {
+        this.member = member;
+        this.title = title;
+        this.isHistory = isHistory;
+        this.completedAt = completedAt;
+    }
+
+    public Task(Member member, String title,  LocalDateTime endAt, boolean isCompleted, EIType eiType, boolean isHistory) {
+        this.member = member;
+        this.title = title;
+        this.endAt = endAt;
+        this.isCompleted = isCompleted;
+        this.eiType = eiType;
+        this.isHistory = isHistory;
+    }
+
     @Builder
     public Task(Member member, String title, String description, LocalDateTime endAt, boolean isTimeInclude) {
         this.member = member;
