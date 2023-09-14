@@ -150,7 +150,7 @@ public class TaskService {
     if (idx+1 <tasks.size()) 
       futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
 
-    //입력받은 순서배열 일치여부 확인 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    //입력받은 순서배열 일치여부 확인 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     //(1)prev와 next가 없는 경우 진짜없나
     if (tasks.size() == 1) {
       //타입에 맞는 모든 task 가져옴
@@ -177,11 +177,11 @@ public class TaskService {
         throw new InputMismatchException("입력받은 일정 배열이 이상합니다5");
     }
 
-    //검증완료, 연결리스트 연결작업 수행 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-
+    //검증완료, 연결리스트 연결작업 수행 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     Task pastPrev = findTask.getPrev();
     Task pastNext = findTask.getNext();
 
+    //일단 연결고리 다 끊기
     findTask.setPrevTask(null);
     findTask.setNextTask(null);
 
@@ -201,15 +201,15 @@ public class TaskService {
     findTask = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-    //이전꺼끼리 연결
     if(pastPrev != null)
       pastPrev = taskRepository.findById(pastPrev.getId()).orElseThrow(() -> new NotFoundException("asdf"));
     if(pastNext != null)
       pastNext = taskRepository.findById(pastNext.getId()).orElseThrow(() -> new NotFoundException("asdf"));
 
+    //이전꺼끼리 연결
     connectTask(pastPrev, pastNext);
 
-    //future끼리 연결
+    //future랑 findTask 연결
     if (futurePrev != null) {
       futurePrev = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
       futurePrev.setNextTask(findTask);
