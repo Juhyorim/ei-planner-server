@@ -8,6 +8,7 @@ import com.kihyaa.Eiplanner.dto.auth.LoginResponse;
 import com.kihyaa.Eiplanner.dto.auth.RegisterRequest;
 import com.kihyaa.Eiplanner.dto.auth.TokenResponse;
 import com.kihyaa.Eiplanner.exception.MessageCode;
+import com.kihyaa.Eiplanner.exception.exceptions.AuthClientException;
 import com.kihyaa.Eiplanner.exception.exceptions.ConflictException;
 import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
@@ -18,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 import static com.kihyaa.Eiplanner.exception.MessageCode.CONFLICT_EMAIL;
 import static com.kihyaa.Eiplanner.exception.MessageCode.CONFLICT_NICKNAME;
@@ -34,7 +37,8 @@ public class AuthService {
     // 회원 가입
     public String register(RegisterRequest registerRequest, LoginType loginType) {
         validateRegisterRequest(registerRequest);
-        Member member = registerRequest.toEntity(loginType);
+        String password = passwordEncoder.encode(registerRequest.password());
+        Member member = registerRequest.toEntity(password, loginType);
         memberRepository.save(member);
         return jwtProvider.createToken(member);
     }
@@ -56,11 +60,23 @@ public class AuthService {
         }
     }
 
-    // 유효한 멤버 찾기
     private Member findValidMember(LoginRequest loginRequest) {
-        return memberRepository.findByEmail(loginRequest.email())
-                .filter(member -> passwordEncoder.matches(loginRequest.password(), member.getPassword()))
-                .orElseThrow(() -> new NotFoundException(MessageCode.NOT_FOUND));
+        Optional<Member> optionalMember = memberRepository.findByEmail(loginRequest.email());
+
+        if (optionalMember.isEmpty()) {
+            throw new NotFoundException("회원 정보가 없습니다.");
+        }
+
+        Member member = optionalMember.get();
+        log.info("loginRequest의 비밀번호 = {}", loginRequest.password());
+        log.info("데이터베이스의 비밀번호 = {}", member.getPassword());
+
+        if (!passwordEncoder.matches(loginRequest.password(), member.getPassword())) {
+            log.error("비밀번호가 일치하지 않습니다.");
+            throw new AuthClientException("비밀번호가 일치하지 않습니다.");
+        }
+
+        return member;
     }
 
     //회원 탈퇴

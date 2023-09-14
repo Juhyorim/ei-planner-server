@@ -8,6 +8,7 @@ import com.kihyaa.Eiplanner.dto.auth.LoginRequest;
 import com.kihyaa.Eiplanner.dto.auth.RegisterRequest;
 import com.kihyaa.Eiplanner.exception.exceptions.AuthClientException;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
+import com.kihyaa.Eiplanner.security.utils.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -26,6 +27,8 @@ import java.util.Optional;
 @Transactional
 @RequiredArgsConstructor
 public class OAuth2Service {
+    private static final String OAUTH_PASSWORD = "oauth";
+    private final JwtProvider jwtProvider;
     private final OAuth2Properties oAuth2Properties;
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
@@ -41,12 +44,13 @@ public class OAuth2Service {
         Optional<Member> optionalMember = memberRepository.findByEmailAndLoginType(email, LoginType.GOOGLE);
 
         if (optionalMember.isEmpty()) {
-            String encodedPassword = passwordEncoder.encode(" ");
+            String encodedPassword = passwordEncoder.encode(OAUTH_PASSWORD);
             RegisterRequest registerRequest = RegisterRequest.of(name, email, encodedPassword);
             return authService.register(registerRequest, LoginType.GOOGLE);
         }
 
-        return authService.login(LoginRequest.of(email));
+        Member member = optionalMember.get();
+        return jwtProvider.createToken(member);
     }
 
     public String requestAccessToken(String code) {
