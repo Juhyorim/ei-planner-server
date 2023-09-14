@@ -21,7 +21,6 @@ import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 @Service
 public class TaskService {
 
@@ -29,6 +28,7 @@ public class TaskService {
   private final HistoryRepository historyRepository;
   private final EntityManager em;
 
+  @Transactional
   public Long makeTask(MakeTaskRequest request, Member member) {
     Task prev = getFirstTaskPending(member);
 
@@ -40,12 +40,10 @@ public class TaskService {
       .description((request.getDescription() != null)? request.getDescription() : null)
       .endAt((dateTime != null) ? dateTime: null)
       .isTimeInclude((dateTime != null)? request.getIsTimeInclude(): false) //dateTime이 안들어오면 timeInclude는 false여야함
-      .prev(prev)
       .build();
-
-    //이전꺼에 연결
-    if (prev != null)
-      prev.setNextTask(task);
+    
+    //prev와 연결
+    connectTask(prev, task);
 
     taskRepository.save(task);
 
@@ -78,46 +76,25 @@ public class TaskService {
     //Member의 history가 아닌 모든 task를 가져옴 - 정렬은 EiType으로
     List<Task> taskList = taskRepository.findByMemberAndIsHistoryIsFalseOrderByEiType(member);
 
-    boolean isViewDateTime = member.getSetting().getIsViewDateTime();
+    Map<EIType, List<Task>> taskMap = new HashMap<>();
+    
+    //task type별로 해시에 넣기
+    for (EIType type: EIType.values())
+      taskMap.put(type, new ArrayList<>());
 
-    List<Task> listPENDING = new ArrayList<>();
-    List<Task> listIMPORTANT_URGENT = new ArrayList<>();
-    List<Task> listIMPORTANT_NOT_URGENT = new ArrayList<>();
-    List<Task> listNOT_IMPORTANT_URGENT = new ArrayList<>();
-    List<Task> listNOT_IMPORTANT_NOT_URGENT = new ArrayList<>();
-
-    int i =0;
-    while(i < taskList.size()) {
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.IMPORTANT_NOT_URGENT) {
-        listIMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;log.info("IMPORTANT_NOT_URGENT");
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.IMPORTANT_URGENT) {
-        listIMPORTANT_URGENT.add(taskList.get(i)); i++;log.info("IMPORTANT_URGENT");
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.NOT_IMPORTANT_NOT_URGENT) {
-        listNOT_IMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;log.info("NOT_IMPORTANT_NOT_URGENT");
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.NOT_IMPORTANT_URGENT){
-        listNOT_IMPORTANT_URGENT.add(taskList.get(i)); i++;log.info("NOT_IMPORTANT_URGENT");
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.PENDING) {
-        listPENDING.add(taskList.get(i)); i++;
-      }
+    for (Task task: taskList) {
+      taskMap
+        .computeIfAbsent(task.getEiType(), k -> new ArrayList<>())
+        .add(task);
     }
 
-    List<Task> sortedListPENDING = sortTask(listPENDING);
-    List<Task> sortedListIMPORTANT_URGENT = sortTask(listIMPORTANT_URGENT);
-    List<Task> sortedListIMPORTANT_NOT_URGENT = sortTask(listIMPORTANT_NOT_URGENT);
-    List<Task> sortedListNOT_IMPORTANT_URGENT = sortTask(listNOT_IMPORTANT_URGENT);
-    List<Task> sortedListNOT_IMPORTANT_NOT_URGENT = sortTask(listNOT_IMPORTANT_NOT_URGENT);
+    //next next 따라 정렬
+    Map<EIType, List<Task>> sortedTaskMap = new HashMap<>();
 
-    return DashBoardResponse.builder()
-      .pending(new TaskListResponse(TaskResponse.convert(sortedListPENDING, isViewDateTime)))
-      .important_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_URGENT, isViewDateTime)))
-      .important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_NOT_URGENT, isViewDateTime)))
-      .not_important_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_URGENT, isViewDateTime)))
-      .not_important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_NOT_URGENT, isViewDateTime)))
-      .build();
+    for (EIType eiType: taskMap.keySet())
+      sortedTaskMap.put(eiType, sortTask(taskMap.get(eiType)));
+
+    return DashBoardResponse.make(sortedTaskMap, member.getSetting().getIsViewDateTime());
   }
 
   //prev, next 순서에 따라 재배열하는 메서드
@@ -125,7 +102,7 @@ public class TaskService {
     List<Task> sortedList = new ArrayList<>();
     Task current = null;
 
-    //첫 번째 값을 찾음(prev가 null인 경우)
+    //첫 번째 값을 찾음(prev가 null인 거 찾기)
     for (Task task: list) {
       if (task.getPrev() == null) {
         sortedList.add(task);
@@ -134,25 +111,23 @@ public class TaskService {
       }
     }
 
-    //값이 하나도 없을 때
-    if (current == null)
-      return new ArrayList<>();
+    //값이 하나라도 있을 때
+    if (current != null) {
+      //next next 연결
+      while (sortedList.size() != list.size()) {
+        current = current.getNext();
 
-    //next next 연결
-    while (sortedList.size() != list.size()) {
-      current = current.getNext();
+        if (current == null)
+          break;
 
-      if (current == null)
-        break;
-
-      sortedList.add(current);
+        sortedList.add(current);
+      }
     }
-
-    //@TODO 오류처리 0 list.size != sortedList.sie
 
     return sortedList;
   }
 
+  @Transactional
   public void move(Long taskId, TaskMoveRequest taskList, Member member) {
     Task findTask = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
@@ -208,10 +183,7 @@ public class TaskService {
     findTask.setPrevTask(null);
     findTask.setNextTask(null);
 
-    if (pastPrev != null)
-      pastPrev.setNextTask(pastNext);
-    if (pastNext != null)
-      pastNext.setPrevTask(pastPrev);
+    connectTask(pastPrev, pastNext);
 
     em.flush();
     em.clear();
@@ -246,13 +218,13 @@ public class TaskService {
   private static int findTaskIdx(Task findTask, List<Long> tasks) {
     //나 찾기
     for (int i = 0; i< tasks.size(); i++) {
-      if (tasks.get(i).equals(findTask.getId())) {
+      if (tasks.get(i).equals(findTask.getId()))
         return i;
-      }
     }
     return -1;
   }
 
+  @Transactional
   public void delete(Long taskId, Member member) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
@@ -271,14 +243,19 @@ public class TaskService {
     if (next != null)
       next = taskRepository.findById(next.getId()).orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-    if (prev != null)
-      prev.setNextTask(next);
-    if (next != null)
-      next.setPrevTask(prev);
+    connectTask(prev, next);
 
     taskRepository.delete(task);
   }
 
+  private void connectTask(Task prev, Task next) {
+    if (prev != null)
+      prev.setNextTask(next);
+    if (next != null)
+      next.setPrevTask(prev);
+  }
+
+  @Transactional
   public void edit(Long taskId, TaskEditRequest request) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
@@ -311,6 +288,7 @@ public class TaskService {
       .build();
   }
 
+  @Transactional
   public void editCheck(Long taskId, TaskCheckDto dto) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없습니다"));
@@ -318,6 +296,7 @@ public class TaskService {
     task.check(dto.getIs_checked());
   }
 
+  @Transactional
   public void cleanCompleteTasks(Member member) {
     //완료됐으면서 + hisotry가 아닌애들 다 보내기
     List<Task> taskList = taskRepository.findByMemberAndIsCompletedIsTrueAndIsHistoryIsFalse(member);
@@ -341,13 +320,11 @@ public class TaskService {
       if (next != null)
         next = taskRepository.findById(next.getId()).orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-      if (prev != null)
-        prev.setNextTask(next);
-      if (next != null)
-        next.setPrevTask(prev);
+      connectTask(prev, next);
     }
   }
 
+  @Transactional
   public void scheduleTaskTypeRotation(LocalDateTime now){
 
     List<Task> taskNotUrgencyTasks = taskRepository.findNotUrgencyTask(now);
@@ -357,6 +334,7 @@ public class TaskService {
     }
   }
 
+  @Transactional
   public void editToUrgentEiType(Task task) {
     Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
     urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
@@ -368,6 +346,7 @@ public class TaskService {
     }
   }
 
+  @Transactional
   public void fetchAndMoveTask(Task task){
 
       Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
