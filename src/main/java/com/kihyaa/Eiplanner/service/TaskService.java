@@ -285,7 +285,7 @@ public class TaskService {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-    if (task.getMember().getId() != member.getId()) {
+    if (task.getMember().getId().equals(member.getId())) {
       throw new ForbiddenException("일정에 대한 조회 권한이 없습니다");
     }
 

@@ -49,7 +49,7 @@ class SchedulerTest extends IntegrationTestSupport {
                 .containsExactlyInAnyOrder("t4", "t5", "t6");
     }
 
-    @DisplayName("*_NOT_URGENCY Type의 Task를 *_URGENCY Type의 연결리스트 tail로 이동시킬 수 있다.")
+    @DisplayName("*_NOT_URGENCY Type의 Task를 *_URGENCY Type의 연결리스트 tail로 이동시킬 수 있다. 1")
     @Test
     void fetchAndMoveTask(){
         //given
@@ -77,7 +77,34 @@ class SchedulerTest extends IntegrationTestSupport {
                 .containsExactlyInAnyOrder("t4");
     }
 
-    @Disabled
+    @DisplayName("*_NOT_URGENCY Type의 Task를 *_URGENCY Type의 연결리스트 tail로 이동시킬 수 있다. 2")
+    @Test
+    void fetchAndMoveTask2(){
+        //given
+        Setting setting = createSetting();
+        Member member = createMember(testEmail, setting);
+        settingRepository.save(setting);
+        memberRepository.save(member);
+
+        List<Task> taskList = createScheduleTaskList(member);
+        taskRepository.saveAll(taskList);
+
+        Task targetTask = taskList.get(1);
+
+        //when
+        taskService.fetchAndMoveTask(targetTask);
+        List<Task> level1Task = taskRepository.findByMemberAndEiType(member, EIType.IMPORTANT_URGENT);
+        List<Task> level2Task = taskRepository.findByMemberAndEiType(member, EIType.IMPORTANT_NOT_URGENT);
+
+        //then
+        assertThat(level1Task).hasSize(1)
+                .extracting("title")
+                .containsExactlyInAnyOrder("t2");
+        assertThat(level2Task).hasSize(2)
+                .extracting("title")
+                .containsExactlyInAnyOrder("t1", "t3");
+    }
+
     @DisplayName("NOT_URGENCY 타입의 Task들의 완료 시간이 / Setting의 자동 긴급 전환 시간보다 작을 경우 / 긴급으로 타입 수정 + 연결리스트 tail 자리에 붙일 수 있다.")
     @Test
     void scheduleTaskTypeRotation() {
