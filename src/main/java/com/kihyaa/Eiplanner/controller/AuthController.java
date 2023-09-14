@@ -3,14 +3,12 @@ package com.kihyaa.Eiplanner.controller;
 import com.kihyaa.Eiplanner.annotation.CurrentMember;
 import com.kihyaa.Eiplanner.domain.LoginType;
 import com.kihyaa.Eiplanner.domain.Member;
-import com.kihyaa.Eiplanner.dto.auth.LoginResponse;
-import com.kihyaa.Eiplanner.dto.auth.TokenResponse;
 import com.kihyaa.Eiplanner.dto.response.MapResponse;
 import com.kihyaa.Eiplanner.exception.MessageCode;
 import com.kihyaa.Eiplanner.dto.auth.LoginRequest;
 import com.kihyaa.Eiplanner.dto.auth.RegisterRequest;
 import com.kihyaa.Eiplanner.dto.response.ApiResponse;
-import com.kihyaa.Eiplanner.service.AuthService;
+import com.kihyaa.Eiplanner.service.auth.NomalAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +21,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final AuthService authService;
+    private final NomalAuthService nomalAuthService;
 
     @PostMapping("/register")
     public ResponseEntity<MapResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
 
-        String token = authService.register(registerRequest, LoginType.NOMAL);
+        String token = nomalAuthService.register(registerRequest, LoginType.NOMAL);
 
         return ResponseEntity.ok(MapResponse.of("token", token));
     }
@@ -36,7 +34,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<MapResponse> login(@RequestBody LoginRequest loginRequest) {
 
-        String token  = authService.login(loginRequest);
+        String token  = nomalAuthService.login(loginRequest, LoginType.NOMAL);
         log.info("일반 로그인 token = {}", token);
 
         return ResponseEntity.ok(MapResponse.of("token", token));
@@ -45,7 +43,7 @@ public class AuthController {
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse> delete(@CurrentMember Member member) {
 
-        authService.delete(member);
+        nomalAuthService.delete(member);
 
         return ApiResponse.createResponse(MessageCode.SUCCESS_DELETE_RESOURCE, HttpStatus.OK);
     }

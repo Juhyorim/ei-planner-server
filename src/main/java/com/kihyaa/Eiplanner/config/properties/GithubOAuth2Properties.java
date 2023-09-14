@@ -8,11 +8,10 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "spring.security.oauth2.client.registration.google")
-public class OAuth2Properties {
+@ConfigurationProperties(prefix = "spring.security.oauth2.client.registration.github")
+public class GithubOAuth2Properties {
     private String clientId;
     private String clientSecret;
-    private String redirectUri;
     private String tokenUri;
     private String resourceUri;
 }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class OAuth2UserInfo {
-    private  String name;
+public class GoogleProfile{
+    private String name;
     private String email;
 }
