@@ -35,4 +35,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
   List<Task> findNotUrgencyTask(@Param("localDateTime") LocalDateTime localDateTime);
 
   Optional<Task> findByMemberAndEiTypeAndPrevIsNullAndIsHistoryIsFalseAndIsCompletedIsFalse(Member member, EIType eiType);
+
+  List<Task> findByMemberAndEiType(Member member, EIType eiType);
+
+  List<Task> findByMember(Member member);
 }

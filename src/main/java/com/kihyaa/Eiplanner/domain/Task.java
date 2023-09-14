@@ -2,6 +2,9 @@ package com.kihyaa.Eiplanner.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.boot.context.properties.bind.DefaultValue;
+import org.springframework.expression.spel.ast.NullLiteral;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -58,6 +61,15 @@ public class Task {
         this.title = title;
         this.isHistory = isHistory;
         this.completedAt = completedAt;
+    }
+
+    public Task(Member member, String title,  LocalDateTime endAt, boolean isCompleted, EIType eiType, boolean isHistory) {
+        this.member = member;
+        this.title = title;
+        this.endAt = endAt;
+        this.isCompleted = isCompleted;
+        this.eiType = eiType;
+        this.isHistory = isHistory;
     }
 
     @Builder

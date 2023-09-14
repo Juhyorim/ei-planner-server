@@ -35,13 +35,13 @@ public class TaskService {
     LocalDateTime dateTime = validAndEditDateTime(request.getEndAt(), request.getIsTimeInclude());
 
     Task task = Task.builder()
-      .member(member)
-      .title(request.getTitle())
-      .description((request.getDescription() != null)? request.getDescription() : null)
-      .endAt((dateTime != null) ? dateTime: null)
-      .isTimeInclude((dateTime != null)? request.getIsTimeInclude(): false) //dateTime이 안들어오면 timeInclude는 false여야함
-      .prev(prev)
-      .build();
+            .member(member)
+            .title(request.getTitle())
+            .description((request.getDescription() != null)? request.getDescription() : null)
+            .endAt((dateTime != null) ? dateTime: null)
+            .isTimeInclude((dateTime != null)? request.getIsTimeInclude(): false) //dateTime이 안들어오면 timeInclude는 false여야함
+            .prev(prev)
+            .build();
 
     //이전꺼에 연결
     if (prev != null)
@@ -112,12 +112,12 @@ public class TaskService {
     List<Task> sortedListNOT_IMPORTANT_NOT_URGENT = sortTask(listNOT_IMPORTANT_NOT_URGENT);
 
     return DashBoardResponse.builder()
-      .pending(new TaskListResponse(TaskResponse.convert(sortedListPENDING, isViewDateTime)))
-      .important_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_URGENT, isViewDateTime)))
-      .important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_NOT_URGENT, isViewDateTime)))
-      .not_important_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_URGENT, isViewDateTime)))
-      .not_important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_NOT_URGENT, isViewDateTime)))
-      .build();
+            .pending(new TaskListResponse(TaskResponse.convert(sortedListPENDING, isViewDateTime)))
+            .important_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_URGENT, isViewDateTime)))
+            .important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_NOT_URGENT, isViewDateTime)))
+            .not_important_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_URGENT, isViewDateTime)))
+            .not_important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_NOT_URGENT, isViewDateTime)))
+            .build();
   }
 
   //prev, next 순서에 따라 재배열하는 메서드
@@ -155,7 +155,7 @@ public class TaskService {
 
   public void move(Long taskId, TaskMoveRequest taskList, Member member) {
     Task findTask = taskRepository.findById(taskId)
-      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     //목적지의 task 리스트 분석
     List<Long> tasks = taskList.getTasks();
@@ -169,10 +169,10 @@ public class TaskService {
     Task futurePrev = null;
     Task futureNext = null;
 
-    if (idx-1 >= 0) 
+    if (idx-1 >= 0)
       futurePrev = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
 
-    if (idx+1 <tasks.size()) 
+    if (idx+1 <tasks.size())
       futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
 
     //입력받은 순서배열 일치여부 확인 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
@@ -217,7 +217,7 @@ public class TaskService {
     em.clear();
 
     findTask = taskRepository.findById(taskId)
-      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     findTask.setEiType(taskList.getEi_type());
 
@@ -237,7 +237,7 @@ public class TaskService {
     em.clear();
 
     findTask = taskRepository.findById(taskId)
-      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     findTask.setPrevTask(futurePrev);
     findTask.setNextTask(futureNext);
@@ -256,7 +256,7 @@ public class TaskService {
 
   public void delete(Long taskId, Member member) {
     Task task = taskRepository.findById(taskId)
-      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     Task prev = task.getPrev();
     Task next = task.getNext();
@@ -282,7 +282,7 @@ public class TaskService {
 
   public void edit(Long taskId, TaskEditRequest request) {
     Task task = taskRepository.findById(taskId)
-      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     LocalDateTime dateTime = request.getEnd_at();
     //time이 포함되지 않았다면 그냥 저장
@@ -295,26 +295,26 @@ public class TaskService {
   @Transactional(readOnly = true)
   public TaskResponse getInfo(Long taskId, Member member) {
     Task task = taskRepository.findById(taskId)
-      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     if (task.getMember().getId() != member.getId()) {
       throw new ForbiddenException("일정에 대한 조회 권한이 없습니다");
     }
 
     return TaskResponse.builder()
-      .id(taskId)
-      .title(task.getTitle())
-      .description(task.getDescription())
-      .endAt(task.getEndAt())
-      .isTimeInclude(task.getIsTimeInclude())
-      .isCompleted(task.getIsCompleted())
-      .eiType(task.getEiType())
-      .build();
+            .id(taskId)
+            .title(task.getTitle())
+            .description(task.getDescription())
+            .endAt(task.getEndAt())
+            .isTimeInclude(task.getIsTimeInclude())
+            .isCompleted(task.getIsCompleted())
+            .eiType(task.getEiType())
+            .build();
   }
 
   public void editCheck(Long taskId, TaskCheckDto dto) {
     Task task = taskRepository.findById(taskId)
-      .orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없습니다"));
+            .orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없습니다"));
 
     task.check(dto.getIs_checked());
   }
@@ -355,8 +355,8 @@ public class TaskService {
 
     List<Task> taskNotUrgencyTasks = taskRepository.findNotUrgencyTask(now);
     for(Task task : taskNotUrgencyTasks){
-        fetchAndMoveTask(task);
-        editToUrgentEiType(task);
+      fetchAndMoveTask(task);
+      editToUrgentEiType(task);
     }
   }
 
@@ -371,23 +371,25 @@ public class TaskService {
     }
   }
 
-  public void fetchAndMoveTask(Task task){
+  public void  fetchAndMoveTask(Task task){
 
-      Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
-      urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
-      urgencyRotationMap.put(EIType.NOT_IMPORTANT_NOT_URGENT, EIType.NOT_IMPORTANT_URGENT);
-      List<Task> taskList = new ArrayList<>();
+    Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
+    urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
+    urgencyRotationMap.put(EIType.NOT_IMPORTANT_NOT_URGENT, EIType.NOT_IMPORTANT_URGENT);
+    List<Task> taskList = new ArrayList<>();
 
-      Optional<Task> t = taskRepository.findByMemberAndEiTypeAndPrevIsNullAndIsHistoryIsFalseAndIsCompletedIsFalse(task.getMember(), urgencyRotationMap.get(task.getEiType()));
-      if(t.isPresent()){
-        taskList = getAllLinkedList(t.get());
-      }
-      taskList.add(task);
+    Optional<Task> t = taskRepository.findByMemberAndEiTypeAndPrevIsNullAndIsHistoryIsFalseAndIsCompletedIsFalse(task.getMember(), urgencyRotationMap.get(task.getEiType()));
 
-      List<Long> taskIds = taskList.stream().map(Task::getId).toList();
+    if(t.isPresent()){
+      taskList = getAllLinkedList(t.get());
+    }
+    taskList.add(task);
 
-      TaskMoveRequest request = new TaskMoveRequest(urgencyRotationMap.get(task.getEiType()), taskIds);
-      move(task.getId(), request, task.getMember());
+    List<Long> taskIds = taskList.stream().map(Task::getId).toList();
+
+    TaskMoveRequest request = new TaskMoveRequest(urgencyRotationMap.get(task.getEiType()), taskIds);
+
+    move(task.getId(), request, task.getMember());
 
   }
 
