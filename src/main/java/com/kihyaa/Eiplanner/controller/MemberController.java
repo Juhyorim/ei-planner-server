@@ -2,6 +2,7 @@ package com.kihyaa.Eiplanner.controller;
 
 import com.kihyaa.Eiplanner.annotation.CurrentMember;
 import com.kihyaa.Eiplanner.domain.Member;
+import com.kihyaa.Eiplanner.dto.response.MapResponse;
 import com.kihyaa.Eiplanner.dto.s3.PresignedRequest;
 import com.kihyaa.Eiplanner.dto.s3.PresignedResonse;
 import com.kihyaa.Eiplanner.exception.MessageCode;
@@ -15,6 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -35,13 +39,19 @@ public class MemberController {
     }
 
     @PutMapping("/nickname")
-    public ResponseEntity<ApiResponse> updateNickname(@CurrentMember Member member, String nickname) {
+    public ResponseEntity<MapResponse> updateNickname(@CurrentMember Member member, String nickname) {
         memberService.updateNickname(member, nickname);
-        return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
+        return ResponseEntity.ok(MapResponse.of("nickname", nickname));
     }
 
     @PutMapping("/profile-image")
     public ResponseEntity<PresignedResonse> getPresignedUrls(@CurrentMember Member member, @Valid @RequestBody PresignedRequest presignedRequest) {
         return ResponseEntity.ok(s3Service.createPresignedUrl(member, presignedRequest));
+    }
+
+    @DeleteMapping("/profile-image")
+    public ResponseEntity<MapResponse> deleteImage(@CurrentMember Member member) {
+        memberService.deleteProfileImage(member);
+        return ResponseEntity.ok(MapResponse.of("profile_image_url", " "));
     }
 }

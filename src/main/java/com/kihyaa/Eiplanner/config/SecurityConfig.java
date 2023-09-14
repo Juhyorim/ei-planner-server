@@ -27,12 +27,13 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CorsConfig corsConfig;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors-> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors-> cors.configurationSource(corsConfig.corsConfigurationSource()))
 
                 .authorizeHttpRequests((Requests) -> {
                     Requests.requestMatchers(
@@ -40,7 +41,8 @@ public class SecurityConfig {
                             "/api/v1/auth/delete",
                             "/api/v1/history/**",
                             "/api/v1/tasks/**",
-                            "/api/v1/settings/**"
+                            "/api/v1/settings/**",
+                            "/api/v1/member/**"
                     ).authenticated();
 
                     Requests.anyRequest().permitAll();
@@ -55,35 +57,6 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(jwtAuthenticationFilter, BasicAuthenticationFilter.class)
                 .build();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:3000");
-        configuration.addAllowedOrigin("http://localhost:3000/");
-        configuration.addAllowedOrigin("http://localhost");
-        configuration.addAllowedOrigin("http://localhost/");
-        configuration.addAllowedOrigin("http://localhost:80");
-        configuration.addAllowedOrigin("http://localhost:80/");
-        configuration.addAllowedOrigin("http://localhost:80");
-        configuration.addAllowedOrigin("http://localhost:80/");
-        configuration.addAllowedOrigin("https://api.eiplanner.com/");
-        configuration.addAllowedOrigin("https://api.eiplanner.com");
-        configuration.addAllowedOrigin("https://eiplanner.com");
-        configuration.addAllowedOrigin("https://eiplanner.com/");
-        configuration.addAllowedOrigin("http://118.67.128.48/");
-        configuration.addAllowedOrigin("http://118.67.128.48");
-
-
-
-        configuration.addAllowedHeader("*");
-        configuration.addAllowedMethod("*");
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
     }
 
     @Bean

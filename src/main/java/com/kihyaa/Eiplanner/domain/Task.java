@@ -2,9 +2,6 @@ package com.kihyaa.Eiplanner.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.boot.context.properties.bind.DefaultValue;
-import org.springframework.expression.spel.ast.NullLiteral;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -47,12 +44,12 @@ public class Task {
     private LocalDateTime completedAt = null;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="next_task_id") //@TODO BuilderDefault 적요앙ㄴ해도 되는지 확인
+    @JoinColumn(name="next_task_id")
     private Task next = null;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="prev_task_id") //@TODO BuilderDefault 적요앙ㄴ해도 되는지 확인
-    private Task prev = null; //@TODO 삭제할 때 꼭 고려
+    @JoinColumn(name="prev_task_id")
+    private Task prev = null;
 
     private Boolean isHistory = false;
 
@@ -73,13 +70,12 @@ public class Task {
     }
 
     @Builder
-    public Task(Member member, String title, String description, LocalDateTime endAt, boolean isTimeInclude, Task prev) {
+    public Task(Member member, String title, String description, LocalDateTime endAt, boolean isTimeInclude) {
         this.member = member;
         this.title = title;
         this.description = description;
         this.endAt = endAt;
         this.isTimeInclude = isTimeInclude;
-        this.prev = prev;
     }
 
     public void setNextTask(Task task) {

@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -37,7 +38,7 @@ public class S3Service {
 
         updateMemberProfile(member, imageUrl);
 
-        return buildPresignedResponse(urlRequest);
+        return buildPresignedResponse(imageUrl, urlRequest);
     }
 
     private String generateFileName(String originalFileName) {
@@ -66,8 +67,9 @@ public class S3Service {
         memberRepository.save(member);
     }
 
-    private PresignedResonse buildPresignedResponse(GeneratePresignedUrlRequest urlRequest) {
+    private PresignedResonse buildPresignedResponse(String changedUrl, GeneratePresignedUrlRequest urlRequest) {
         return PresignedResonse.builder()
+                .changedUrl(changedUrl)
                 .ProfileImageUrl(amazonS3Client.generatePresignedUrl(urlRequest))
                 .build();
     }

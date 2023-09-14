@@ -21,7 +21,6 @@ import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 @Service
 public class TaskService {
 
@@ -29,23 +28,22 @@ public class TaskService {
   private final HistoryRepository historyRepository;
   private final EntityManager em;
 
+  @Transactional
   public Long makeTask(MakeTaskRequest request, Member member) {
     Task prev = getFirstTaskPending(member);
 
-    LocalDateTime dateTime = validAndEditDateTime(request.getEndAt(), request.getIsTimeInclude());
+    LocalDateTime dateTime = checkAndEditDateTime(request.getEndAt(), request.getIsTimeInclude());
 
     Task task = Task.builder()
-            .member(member)
-            .title(request.getTitle())
-            .description((request.getDescription() != null)? request.getDescription() : null)
-            .endAt((dateTime != null) ? dateTime: null)
-            .isTimeInclude((dateTime != null)? request.getIsTimeInclude(): false) //dateTime이 안들어오면 timeInclude는 false여야함
-            .prev(prev)
-            .build();
+      .member(member)
+      .title(request.getTitle())
+      .description((request.getDescription() != null)? request.getDescription() : null)
+      .endAt((dateTime != null) ? dateTime: null)
+      .isTimeInclude((dateTime != null)? request.getIsTimeInclude(): false) //dateTime이 안들어오면 timeInclude는 false여야함
+      .build();
 
-    //이전꺼에 연결
-    if (prev != null)
-      prev.setNextTask(task);
+    //prev와 연결
+    connectTask(prev, task);
 
     taskRepository.save(task);
 
@@ -64,7 +62,7 @@ public class TaskService {
       throw new InternalServerErrorException("일정 배열의 값이 이상합니다. 데이터베이스 이상.. 관리자에게 문의하세요");
   }
 
-  public LocalDateTime validAndEditDateTime(LocalDateTime dateTime, boolean isTimeInclude) {
+  private LocalDateTime checkAndEditDateTime(LocalDateTime dateTime, boolean isTimeInclude) {
     //timeInclude가 false인데 dateTime이 null이 아니면 -> 시간은 쓸모없는거니까 시간부분 초기화
     if (dateTime != null && !isTimeInclude)
       dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
@@ -78,46 +76,25 @@ public class TaskService {
     //Member의 history가 아닌 모든 task를 가져옴 - 정렬은 EiType으로
     List<Task> taskList = taskRepository.findByMemberAndIsHistoryIsFalseOrderByEiType(member);
 
-    boolean isViewDateTime = member.getSetting().getIsViewDateTime();
+    Map<EIType, List<Task>> taskMap = new HashMap<>();
 
-    List<Task> listPENDING = new ArrayList<>();
-    List<Task> listIMPORTANT_URGENT = new ArrayList<>();
-    List<Task> listIMPORTANT_NOT_URGENT = new ArrayList<>();
-    List<Task> listNOT_IMPORTANT_URGENT = new ArrayList<>();
-    List<Task> listNOT_IMPORTANT_NOT_URGENT = new ArrayList<>();
+    //task type별로 해시에 넣기
+    for (EIType type: EIType.values())
+      taskMap.put(type, new ArrayList<>());
 
-    int i =0;
-    while(i < taskList.size()) {
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.PENDING) {
-        listPENDING.add(taskList.get(i)); i++;
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.IMPORTANT_URGENT) {
-        listIMPORTANT_URGENT.add(taskList.get(i)); i++;
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.IMPORTANT_NOT_URGENT) {
-        listIMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.NOT_IMPORTANT_URGENT){
-        listNOT_IMPORTANT_URGENT.add(taskList.get(i)); i++;
-      }
-      while (i < taskList.size() && taskList.get(i).getEiType() == EIType.NOT_IMPORTANT_NOT_URGENT) {
-        listNOT_IMPORTANT_NOT_URGENT.add(taskList.get(i)); i++;
-      }
+    for (Task task: taskList) {
+      taskMap
+        .computeIfAbsent(task.getEiType(), k -> new ArrayList<>())
+        .add(task);
     }
 
-    List<Task> sortedListPENDING = sortTask(listPENDING);
-    List<Task> sortedListIMPORTANT_URGENT = sortTask(listIMPORTANT_URGENT);
-    List<Task> sortedListIMPORTANT_NOT_URGENT = sortTask(listIMPORTANT_NOT_URGENT);
-    List<Task> sortedListNOT_IMPORTANT_URGENT = sortTask(listNOT_IMPORTANT_URGENT);
-    List<Task> sortedListNOT_IMPORTANT_NOT_URGENT = sortTask(listNOT_IMPORTANT_NOT_URGENT);
+    //next next 따라 정렬
+    Map<EIType, List<Task>> sortedTaskMap = new HashMap<>();
 
-    return DashBoardResponse.builder()
-            .pending(new TaskListResponse(TaskResponse.convert(sortedListPENDING, isViewDateTime)))
-            .important_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_URGENT, isViewDateTime)))
-            .important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListIMPORTANT_NOT_URGENT, isViewDateTime)))
-            .not_important_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_URGENT, isViewDateTime)))
-            .not_important_not_urgent(new TaskListResponse(TaskResponse.convert(sortedListNOT_IMPORTANT_NOT_URGENT, isViewDateTime)))
-            .build();
+    for (EIType eiType: taskMap.keySet())
+      sortedTaskMap.put(eiType, sortTask(taskMap.get(eiType)));
+
+    return DashBoardResponse.make(sortedTaskMap, member.getSetting().getIsViewDateTime());
   }
 
   //prev, next 순서에 따라 재배열하는 메서드
@@ -125,7 +102,7 @@ public class TaskService {
     List<Task> sortedList = new ArrayList<>();
     Task current = null;
 
-    //첫 번째 값을 찾음(prev가 null인 경우)
+    //첫 번째 값을 찾음(prev가 null인 거 찾기)
     for (Task task: list) {
       if (task.getPrev() == null) {
         sortedList.add(task);
@@ -134,28 +111,26 @@ public class TaskService {
       }
     }
 
-    //값이 하나도 없을 때
-    if (current == null)
-      return new ArrayList<>();
+    //값이 하나라도 있을 때
+    if (current != null) {
+      //next next 연결
+      while (sortedList.size() != list.size()) {
+        current = current.getNext();
 
-    //next next 연결
-    while (sortedList.size() != list.size()) {
-      current = current.getNext();
+        if (current == null)
+          break;
 
-      if (current == null)
-        break;
-
-      sortedList.add(current);
+        sortedList.add(current);
+      }
     }
-
-    //@TODO 오류처리 0 list.size != sortedList.sie
 
     return sortedList;
   }
 
+  @Transactional
   public void move(Long taskId, TaskMoveRequest taskList, Member member) {
     Task findTask = taskRepository.findById(taskId)
-            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     //목적지의 task 리스트 분석
     List<Long> tasks = taskList.getTasks();
@@ -164,99 +139,107 @@ public class TaskService {
 
     //내가 없으면 - InputMismatchException
     if (idx == -1)
-      throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+      throw new InputMismatchException("입력받은 일정 배열이 이상합니다1");
 
     Task futurePrev = null;
     Task futureNext = null;
 
-    if (idx-1 >= 0)
+    if (idx-1 >= 0) 
       futurePrev = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
 
-    if (idx+1 <tasks.size())
+    if (idx+1 <tasks.size()) 
       futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
 
-    //입력받은 순서배열 일치여부 확인 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    //입력받은 순서배열 일치여부 확인 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     //(1)prev와 next가 없는 경우 진짜없나
     if (tasks.size() == 1) {
       //타입에 맞는 모든 task 가져옴
       List<Task> typeList = taskRepository.findByMemberAndEiTypeAndIsHistoryIsFalse(member, taskList.getEi_type());
       if (typeList.size() != 0)
-        throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+        throw new InputMismatchException("입력받은 일정 배열이 이상합니다2");
     }
 
     //(2)prev가 없는 경우 next의 prev가 진짜 없나
     if (idx == 0 && tasks.size() > 1) {
       if (futureNext.getPrev() != null)
-        throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+        throw new InputMismatchException("입력받은 일정 배열이 이상합니다3");
     }
 
     //(3)next가 없는 경우 prev의 next가 진짜 없나
     if (idx == tasks.size()-1 && tasks.size() > 1) {
       if (futurePrev.getNext() != null)
-        throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+        throw new InputMismatchException("입력받은 일정 배열이 이상합니다4");
     }
 
     //(4)다 있는 경우 둘이 연결되어있나
     if (idx > 0 && idx < tasks.size()-1) {
       if (futurePrev.getId()!= futureNext.getPrev().getId())
-        throw new InputMismatchException("입력받은 일정 배열이 이상합니다");
+        throw new InputMismatchException("입력받은 일정 배열이 이상합니다5");
     }
 
+    //검증완료, 연결리스트 연결작업 수행 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     Task pastPrev = findTask.getPrev();
     Task pastNext = findTask.getNext();
 
+    //일단 연결고리 다 끊기
     findTask.setPrevTask(null);
     findTask.setNextTask(null);
 
-    if (pastPrev != null)
-      pastPrev.setNextTask(pastNext);
-    if (pastNext != null)
-      pastNext.setPrevTask(pastPrev);
-
-    em.flush();
-    em.clear();
-
-    findTask = taskRepository.findById(taskId)
-            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
-
-    findTask.setEiType(taskList.getEi_type());
-
-    if (idx-1 >= 0)
-      futurePrev = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
-
-    if (idx+1 <tasks.size())
-      futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
-
-    //future끼리 연결
     if (futurePrev != null)
-      futurePrev.setNextTask(findTask);
+      futurePrev.setNextTask(null);
     if (futureNext != null)
-      futureNext.setPrevTask(findTask);
+      futureNext.setPrevTask(null);
+
+    if (pastPrev != null)
+      pastPrev.setNextTask(null);
+    if (pastNext != null)
+      pastNext.setPrevTask(null);
 
     em.flush();
     em.clear();
 
     findTask = taskRepository.findById(taskId)
-            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+
+    if(pastPrev != null)
+      pastPrev = taskRepository.findById(pastPrev.getId()).orElseThrow(() -> new NotFoundException("asdf"));
+    if(pastNext != null)
+      pastNext = taskRepository.findById(pastNext.getId()).orElseThrow(() -> new NotFoundException("asdf"));
+
+    //이전꺼끼리 연결
+    connectTask(pastPrev, pastNext);
+
+    //future랑 findTask 연결
+    if (futurePrev != null) {
+      futurePrev = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
+      futurePrev.setNextTask(findTask);
+    }
+
+    if (futureNext != null) {
+      futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
+      futureNext.setPrevTask(findTask);
+    }
+
+    //findTask 연결, 타입수정
+    findTask.setEiType(taskList.getEi_type());
 
     findTask.setPrevTask(futurePrev);
     findTask.setNextTask(futureNext);
   }
 
   private static int findTaskIdx(Task findTask, List<Long> tasks) {
-    int idx = -1;
     //나 찾기
     for (int i = 0; i< tasks.size(); i++) {
-      if (tasks.get(i) == findTask.getId()) {
-        idx = i; break;
-      }
+      if (tasks.get(i).equals(findTask.getId()))
+        return i;
     }
-    return idx;
+    return -1;
   }
 
+  @Transactional
   public void delete(Long taskId, Member member) {
     Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     Task prev = task.getPrev();
     Task next = task.getNext();
@@ -272,53 +255,60 @@ public class TaskService {
     if (next != null)
       next = taskRepository.findById(next.getId()).orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-    if (prev != null)
-      prev.setNextTask(next);
-    if (next != null)
-      next.setPrevTask(prev);
+    connectTask(prev, next);
 
     taskRepository.delete(task);
   }
 
+  private void connectTask(Task prev, Task next) {
+    if (prev != null)
+      prev.setNextTask(next);
+    if (next != null)
+      next.setPrevTask(prev);
+  }
+
+  @Transactional
   public void edit(Long taskId, TaskEditRequest request) {
     Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     LocalDateTime dateTime = request.getEnd_at();
     //time이 포함되지 않았다면 그냥 저장
     if (dateTime != null && !request.is_time_include())
       dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
 
-    task.edit(request.getTitle(), request.getDescription(), dateTime, (dateTime != null)? request.is_time_include(): null);
+    task.edit(request.getTitle(), request.getDescription(), dateTime, (dateTime != null)? request.is_time_include(): false);
   }
 
   @Transactional(readOnly = true)
   public TaskResponse getInfo(Long taskId, Member member) {
     Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
     if (task.getMember().getId() != member.getId()) {
       throw new ForbiddenException("일정에 대한 조회 권한이 없습니다");
     }
 
     return TaskResponse.builder()
-            .id(taskId)
-            .title(task.getTitle())
-            .description(task.getDescription())
-            .endAt(task.getEndAt())
-            .isTimeInclude(task.getIsTimeInclude())
-            .isCompleted(task.getIsCompleted())
-            .eiType(task.getEiType())
-            .build();
+      .id(taskId)
+      .title(task.getTitle())
+      .description(task.getDescription())
+      .endAt(task.getEndAt())
+      .isTimeInclude(task.getIsTimeInclude())
+      .isCompleted(task.getIsCompleted())
+      .eiType(task.getEiType())
+      .build();
   }
 
+  @Transactional
   public void editCheck(Long taskId, TaskCheckDto dto) {
     Task task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없습니다"));
+      .orElseThrow(() -> new NoSuchElementException("일정을 찾을 수 없습니다"));
 
     task.check(dto.getIs_checked());
   }
 
+  @Transactional
   public void cleanCompleteTasks(Member member) {
     //완료됐으면서 + hisotry가 아닌애들 다 보내기
     List<Task> taskList = taskRepository.findByMemberAndIsCompletedIsTrueAndIsHistoryIsFalse(member);
@@ -342,15 +332,11 @@ public class TaskService {
       if (next != null)
         next = taskRepository.findById(next.getId()).orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-      if (prev != null)
-        prev.setNextTask(next);
-      if (next != null)
-        next.setPrevTask(prev);
+      connectTask(prev, next);
     }
   }
 
-
-
+  @Transactional
   public void scheduleTaskTypeRotation(LocalDateTime now){
 
     List<Task> taskNotUrgencyTasks = taskRepository.findNotUrgencyTask(now);
@@ -360,6 +346,7 @@ public class TaskService {
     }
   }
 
+  @Transactional
   public void editToUrgentEiType(Task task) {
     Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
     urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
@@ -371,7 +358,7 @@ public class TaskService {
     }
   }
 
-  public void  fetchAndMoveTask(Task task){
+  public void fetchAndMoveTask(Task task){
 
     Map<EIType, EIType> urgencyRotationMap = new HashMap<>();
     urgencyRotationMap.put(EIType.IMPORTANT_NOT_URGENT, EIType.IMPORTANT_URGENT);
