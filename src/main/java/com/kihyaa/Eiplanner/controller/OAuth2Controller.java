@@ -21,6 +21,6 @@ public class OAuth2Controller {
     @GetMapping("/google")
     public void googleLogin(@RequestParam String code, HttpServletResponse response) throws IOException {
         String token = oAuth2Service.oauthLogin(code);
-        response.sendRedirect(frontendUrl+"?"+token);
+        response.sendRedirect(frontendUrl+"?token="+token);
     }
 }
