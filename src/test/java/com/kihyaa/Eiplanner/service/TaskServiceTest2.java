@@ -158,7 +158,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 같은 타입으로 이동: 가장 상위")
   @Transactional
-  @Order(2)
+  @Order(3)
   @Test
   void moveTaskFirstPosition() {
     make4Task();
@@ -186,7 +186,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 같은 타입으로 이동: 가장 하위")
   @Transactional
-  @Order(3)
+  @Order(4)
   @Test
   void moveTaskLastPosition() {
     make4Task();
@@ -207,7 +207,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 같은 타입으로 이동: 중간으로")
   @Transactional
-  @Order(4)
+  @Order(5)
   @Test
   void moveTaskCenterPosition() {
     make4Task();
@@ -228,7 +228,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 다른 타입으로 이동: 가장 상위")
   @Transactional
-  @Order(5)
+  @Order(6)
   @Test
   void moveTaskFirstPositionDiffType() {
     make4Task();
@@ -255,7 +255,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 다른 타입으로 이동: 가장 하위")
   @Transactional
-  @Order(6)
+  @Order(7)
   @Test
   void moveTaskLastPositionDiffType() {
     make4Task();
@@ -280,7 +280,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 다른 타입으로 이동: 중간으로")
   @Transactional
-  @Order(7)
+  @Order(8)
   @Test
   void moveTaskCenterPositionDiffType() {
     make4Task();
@@ -305,7 +305,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 이동 시 목적지 배열이 정확하지 않은 경우") //솔직히 prev, 나, next만 줘도 동작할듯
   @Transactional
-  @Order(7)
+  @Order(9)
   @Test
   void moveTaskWithBadRequest() {
     make4Task();
@@ -356,16 +356,12 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 상위에서 이동")
   @Transactional
-  @Order(8)
+  @Order(10)
   @Test
   void moveTaskFromFirst() {
     make4Task();
 
     List<Long> lst = makeDestinationOrderList(new Long[]{taskId1});
-
-    logger.info(() -> {
-      return "@@: "+ taskId1+ taskId2 + taskId3 + taskId4;
-    });
 
     taskService.move(taskId1, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
 
@@ -383,16 +379,12 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 중간에서 이동")
   @Transactional
-  @Order(8)
+  @Order(11)
   @Test
   void moveTaskFromCenter() {
     make4Task();
 
     List<Long> lst = makeDestinationOrderList(new Long[]{taskId3});
-
-    logger.info(() -> {
-      return "@@: "+ taskId1+ taskId2 + taskId3 + taskId4;
-    });
 
     taskService.move(taskId3, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
 
@@ -410,16 +402,12 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 하위에서 이동")
   @Transactional
-  @Order(8)
+  @Order(12)
   @Test
   void moveTaskFromLast() {
     make4Task();
 
     List<Long> lst = makeDestinationOrderList(new Long[]{taskId4});
-
-    logger.info(() -> {
-      return "@@: "+ taskId1+ taskId2 + taskId3 + taskId4;
-    });
 
     taskService.move(taskId4, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
 
@@ -438,7 +426,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 조회 테스트")
   @Transactional
-  @Order(8)
+  @Order(13)
   @Test
   void getAllTask() {
     make4Task();
@@ -464,7 +452,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 완료 테스트")
   @Transactional
-  @Order(9)
+  @Order(14)
   @Test
   void completeTask() {
     make4Task();
@@ -494,7 +482,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 정리하기 테스트")
   @Transactional
-  @Order(10)
+  @Order(15)
   @Test
   void clearCompleteTask() throws InterruptedException {
     make4Task();
@@ -521,7 +509,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 삭제 테스트: 첫 번째 위치")
   @Transactional
-  @Order(11)
+  @Order(16)
   @Test
   void deleteFirstPos() {
     make4Task();
@@ -543,7 +531,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 삭제 테스트: 마지막 위치")
   @Transactional
-  @Order(11)
+  @Order(17)
   @Test
   void deleteLastPos() {
     make4Task();
@@ -565,7 +553,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 삭제 테스트: 중간 위치")
   @Transactional
-  @Order(11)
+  @Order(18)
   @Test
   void deleteCenterPos() {
     make4Task();
@@ -592,7 +580,7 @@ public class TaskServiceTest2 {
 
   @DisplayName("일정 내용 수정 테스트")
   @Transactional
-  @Order(12)
+  @Order(19)
   @Test
   void editTaskDetail() throws InterruptedException {
     make4Task();

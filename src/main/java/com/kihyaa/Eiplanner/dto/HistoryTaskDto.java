@@ -1,5 +1,6 @@
 package com.kihyaa.Eiplanner.dto;
 
+import com.kihyaa.Eiplanner.domain.EIType;
 import com.kihyaa.Eiplanner.domain.Task;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,6 +17,7 @@ public class HistoryTaskDto {
     private LocalDateTime end_at;
     private Boolean is_time_include;
     private LocalDateTime completed_at;
+    private EIType eiType;
 
     public static HistoryTaskDto of(Task task) {
         return new HistoryTaskDto(
@@ -24,7 +26,8 @@ public class HistoryTaskDto {
                 task.getDescription(),
                 task.getEndAt(),
                 task.getIsTimeInclude(),
-                task.getCompletedAt()
+                task.getCompletedAt(),
+                task.getEiType()
         );
     }
 }
