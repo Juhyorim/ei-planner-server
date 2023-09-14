@@ -24,12 +24,19 @@ public class Member {
     private String password;
     private String profileImgUrl;
 
+    @Enumerated(EnumType.STRING)
+    private LoginType loginType;
+
     public void changeNickname(String newNickname) {
         this.nickname = newNickname;
     }
 
     public void changeProfileImgUrl(String profileImgUrl) {
         this.profileImgUrl = profileImgUrl;
+    }
+
+    public void deleteProfileImg() {
+        this.profileImgUrl = "";
     }
 }
 

@@ -1,5 +1,7 @@
 package com.kihyaa.Eiplanner.security.utils;
 
+import com.kihyaa.Eiplanner.domain.Member;
+import com.kihyaa.Eiplanner.dto.auth.TokenResponse;
 import com.kihyaa.Eiplanner.exception.exceptions.JwtAuthenticationException;
 import com.kihyaa.Eiplanner.config.properties.JwtProperties;
 import io.jsonwebtoken.*;
@@ -21,7 +23,11 @@ import java.util.Optional;
 public class JwtProvider {
     private final JwtProperties jwtProperties;
 
-    public String createToken(String userSpecification) {
+    public String createToken(Member member) {
+        return createToken(String.format("%s:%s", member.getId(), "MEMBER"));
+    }
+
+    private String createToken(String userSpecification) {
         String secretKey = jwtProperties.getSecretKey();
         long expirationHours = jwtProperties.getExpirationHours();
         String issuer = jwtProperties.getIssuer();

@@ -19,4 +19,11 @@ public class Setting {
     @Builder.Default
     private Boolean isViewDateTime = true;
     private Integer autoEmergencySwitch;
+
+    public static Setting defaultSetting() {
+        return Setting.builder()
+                .isViewDateTime(true)
+                .autoEmergencySwitch(3)
+                .build();
+    }
 }
