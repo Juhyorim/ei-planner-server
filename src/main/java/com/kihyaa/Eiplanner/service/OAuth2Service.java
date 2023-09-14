@@ -5,13 +5,13 @@ import com.kihyaa.Eiplanner.config.properties.OAuth2Properties;
 import com.kihyaa.Eiplanner.domain.LoginType;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.dto.auth.LoginRequest;
-import com.kihyaa.Eiplanner.dto.auth.OAuth2UserInfo;
 import com.kihyaa.Eiplanner.dto.auth.RegisterRequest;
 import com.kihyaa.Eiplanner.exception.exceptions.AuthClientException;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
@@ -30,6 +30,7 @@ public class OAuth2Service {
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
     private final AuthService authService;
+    private final PasswordEncoder passwordEncoder;
 
     public String oauthLogin(String code) {
         String accessToken = requestAccessToken(code);
@@ -40,7 +41,9 @@ public class OAuth2Service {
         Optional<Member> optionalMember = memberRepository.findByEmailAndLoginType(email, LoginType.GOOGLE);
 
         if (optionalMember.isEmpty()) {
-            return authService.register(RegisterRequest.of(name, email), LoginType.GOOGLE);
+            String encodedPassword = passwordEncoder.encode(" ");
+            RegisterRequest registerRequest = RegisterRequest.of(name, email, encodedPassword);
+            return authService.register(registerRequest, LoginType.GOOGLE);
         }
 
         return authService.login(LoginRequest.of(email));

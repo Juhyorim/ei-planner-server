@@ -19,8 +19,8 @@ public record RegisterRequest(
         @Size(min = 8, max = 16, message = "비밀번호는 8~16자리여야 합니다.")
         String password) {
 
-        public static RegisterRequest of(String nickname, String email) {
-                return new RegisterRequest(nickname, email, null);
+        public static RegisterRequest of(String nickname, String email, String password) {
+                return new RegisterRequest(nickname, email, password);
         }
 
         public Member toEntity(LoginType loginType) {
