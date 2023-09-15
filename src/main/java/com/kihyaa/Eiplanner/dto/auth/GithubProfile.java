@@ -5,6 +5,9 @@ import lombok.Data;
 
 @Data
 public class GithubProfile {
+    @JsonProperty("id")
+    private String id;
+
     @JsonProperty("login")
     private String name;
 

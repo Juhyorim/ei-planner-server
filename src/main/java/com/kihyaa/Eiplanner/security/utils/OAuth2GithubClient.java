@@ -64,7 +64,7 @@ public class OAuth2GithubClient {
 
     private void setDefaultEmailIfNull(GithubProfile githubProfile) {
         if (githubProfile.getEmail() == null) {
-            githubProfile.setEmail("github");
+            githubProfile.setEmail(githubProfile.getId());
         }
     }
 
