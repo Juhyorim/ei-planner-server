@@ -15,8 +15,8 @@ public  class  ScheduledTask {
 
     final private TaskService taskService;
 
-//    @Scheduled(cron = "0 0 0/6 * * ?") // 매일 00시를 시작으로 6시간마다 실행
-    @Scheduled(fixedDelay = 100000)
+    @Scheduled(cron = "0 0 0/1 * * ?") // 매일 00시를 시작으로 1시간마다 실행
+//    @Scheduled(fixedDelay = 100000)
     public void PerformTask () {
 
         try {
