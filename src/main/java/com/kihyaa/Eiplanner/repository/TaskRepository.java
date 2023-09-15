@@ -18,6 +18,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
   List<Task> findByMemberAndIsHistoryIsFalseOrderByEiType(Member member);
   List<Task> findByMemberAndEiTypeAndIsHistoryIsFalse(Member member, EIType eiType);
 
+
   List<Task> findByMemberAndIsCompletedIsTrueAndIsHistoryIsFalse(Member member);
 
 

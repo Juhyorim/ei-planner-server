@@ -7,5 +7,6 @@ import lombok.Builder;
 public record MemberResponse(
         String nickname,
         @JsonProperty("profile_image_url") String profileImageUrl,
-        String email) {
+        String email,
+        @JsonProperty("is_view_date_time") Boolean isViewDateTime) {
 }
