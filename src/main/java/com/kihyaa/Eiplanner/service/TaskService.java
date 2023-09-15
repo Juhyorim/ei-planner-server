@@ -94,7 +94,7 @@ public class TaskService {
     for (EIType eiType: taskMap.keySet())
       sortedTaskMap.put(eiType, sortTask(taskMap.get(eiType)));
 
-    return DashBoardResponse.make(sortedTaskMap, member.getSetting().getIsViewDateTime());
+    return DashBoardResponse.make(sortedTaskMap);
   }
 
   //prev, next 순서에 따라 재배열하는 메서드

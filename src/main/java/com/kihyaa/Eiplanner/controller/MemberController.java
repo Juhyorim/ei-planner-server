@@ -24,12 +24,7 @@ public class MemberController {
 
     @GetMapping
     public ResponseEntity<MemberResponse> getMember(@CurrentMember Member member) {
-        return ResponseEntity.ok(
-                MemberResponse.builder()
-                    .email(member.getEmail())
-                    .nickname(member.getNickname())
-                    .profileImageUrl(member.getProfileImgUrl())
-                .build());
+        return ResponseEntity.ok(memberService.getInfo(member));
     }
 
     @PutMapping("/nickname")

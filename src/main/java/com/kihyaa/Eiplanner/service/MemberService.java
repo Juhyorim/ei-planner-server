@@ -1,10 +1,14 @@
 package com.kihyaa.Eiplanner.service;
 
 import com.kihyaa.Eiplanner.domain.Member;
+import com.kihyaa.Eiplanner.domain.Setting;
+import com.kihyaa.Eiplanner.dto.member.MemberResponse;
 import com.kihyaa.Eiplanner.exception.exceptions.ConflictException;
+import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,5 +34,16 @@ public class MemberService {
     public void deleteProfileImage(Member member) {
         member.deleteProfileImg();
         memberRepository.save(member);
+    }
+
+    public MemberResponse getInfo(Member member) {
+        Setting setting = member.getSetting();
+
+        return MemberResponse.builder()
+            .email(member.getEmail())
+            .nickname(member.getNickname())
+            .profileImageUrl(member.getProfileImgUrl())
+            .isViewDateTime(setting.getIsViewDateTime())
+            .build();
     }
 }

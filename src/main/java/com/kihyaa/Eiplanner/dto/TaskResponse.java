@@ -30,7 +30,7 @@ public class TaskResponse {
   @JsonProperty("ei_type")
   private EIType eiType;
 
-  public static List<TaskResponse> convert(List<Task> taskList, boolean isViewDateTime) {
+  public static List<TaskResponse> convert(List<Task> taskList) {
     List<TaskResponse> responses = new ArrayList<>();
     for (Task task: taskList) {
       responses.add(
@@ -38,7 +38,7 @@ public class TaskResponse {
           .id(task.getId())
           .title(task.getTitle())
           .description(task.getDescription())
-          .endAt(isViewDateTime? task.getEndAt() : null)
+          .endAt(task.getEndAt())
           .isTimeInclude(task.getIsTimeInclude())
           .isCompleted(task.getIsCompleted())
           .eiType(task.getEiType())
