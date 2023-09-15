@@ -5,20 +5,14 @@ import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.dto.response.MapResponse;
 import com.kihyaa.Eiplanner.dto.s3.PresignedRequest;
 import com.kihyaa.Eiplanner.dto.s3.PresignedResonse;
-import com.kihyaa.Eiplanner.exception.MessageCode;
 import com.kihyaa.Eiplanner.dto.member.MemberResponse;
-import com.kihyaa.Eiplanner.dto.response.ApiResponse;
 import com.kihyaa.Eiplanner.service.MemberService;
 import com.kihyaa.Eiplanner.service.S3Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @RestController

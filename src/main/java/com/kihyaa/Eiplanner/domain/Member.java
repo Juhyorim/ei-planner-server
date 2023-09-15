@@ -19,6 +19,7 @@ public class Member {
     @JoinColumn(name = "setting_id")
     private Setting setting;
 
+    private String uid;
     private String nickname;
     private String email;
     private String password;

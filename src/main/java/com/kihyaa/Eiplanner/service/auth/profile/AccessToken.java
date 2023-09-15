@@ -1,4 +1,4 @@
-package com.kihyaa.Eiplanner.dto.auth;
+package com.kihyaa.Eiplanner.service.auth.profile;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
