@@ -20,7 +20,7 @@ public class History {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @ManyToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "task_id")
     private Task task;
 
