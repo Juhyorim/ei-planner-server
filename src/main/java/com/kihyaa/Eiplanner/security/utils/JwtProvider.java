@@ -1,7 +1,6 @@
 package com.kihyaa.Eiplanner.security.utils;
 
 import com.kihyaa.Eiplanner.domain.Member;
-import com.kihyaa.Eiplanner.dto.auth.TokenResponse;
 import com.kihyaa.Eiplanner.exception.exceptions.JwtAuthenticationException;
 import com.kihyaa.Eiplanner.config.properties.JwtProperties;
 import io.jsonwebtoken.*;

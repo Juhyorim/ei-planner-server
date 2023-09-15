@@ -26,7 +26,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<MapResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
 
-        String token = nomalAuthService.register(registerRequest, LoginType.NOMAL);
+        String token = nomalAuthService.register(registerRequest, LoginType.nomal);
 
         return ResponseEntity.ok(MapResponse.of("token", token));
     }
@@ -34,7 +34,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<MapResponse> login(@RequestBody LoginRequest loginRequest) {
 
-        String token  = nomalAuthService.login(loginRequest, LoginType.NOMAL);
+        String token  = nomalAuthService.login(loginRequest, LoginType.nomal);
         log.info("일반 로그인 token = {}", token);
 
         return ResponseEntity.ok(MapResponse.of("token", token));

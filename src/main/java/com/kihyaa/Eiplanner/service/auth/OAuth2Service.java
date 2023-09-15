@@ -3,10 +3,9 @@ package com.kihyaa.Eiplanner.service.auth;
 import com.kihyaa.Eiplanner.domain.LoginType;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Setting;
-import com.kihyaa.Eiplanner.dto.auth.GoogleProfile;
-import com.kihyaa.Eiplanner.dto.auth.UserProfile;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
 import com.kihyaa.Eiplanner.security.utils.JwtProvider;
+import com.kihyaa.Eiplanner.service.auth.profile.CommonProfile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,24 +21,29 @@ public class OAuth2Service {
     private final MemberRepository memberRepository;
     private final JwtProvider jwtProvider;
 
-    public String login(GoogleProfile googleProfile, LoginType loginType) {
-        Member member = findOrCreateMember(googleProfile, loginType);
-        return jwtProvider.createToken(member);
+    public String login(CommonProfile commonProfile, LoginType loginType) {
+        Member member = findOrCreateMember(commonProfile, loginType);
+        String token = jwtProvider.createToken(member);
+        log.info("{}의 토큰 : {}", loginType, token);
+        return token;
     }
 
-    private Member findOrCreateMember(GoogleProfile googleProfile, LoginType loginType) {
-        return memberRepository.findByEmailAndLoginType(googleProfile.getEmail(), loginType)
-                .orElseGet(() -> createNewMember(googleProfile, loginType));
+    // CommonProfile을 파라미터로 받음
+    private Member findOrCreateMember(CommonProfile commonProfile, LoginType loginType) {
+        return memberRepository.findByUidAndLoginType(commonProfile.getId(), loginType)
+                .orElseGet(() -> createNewMember(commonProfile, loginType));
     }
 
-    private Member createNewMember(GoogleProfile googleProfile, LoginType loginType) {
+    // CommonProfile을 파라미터로 받음
+    private Member createNewMember(CommonProfile commonProfile, LoginType loginType) {
+        log.info("UID = {}", commonProfile.getId());
         Member newMember = Member.builder()
-                .nickname(googleProfile.getName())
+                .nickname(commonProfile.getName())
                 .loginType(loginType)
-                .email(googleProfile.getEmail())
+                .email(commonProfile.getEmail())
+                .uid(commonProfile.getId())
                 .setting(Setting.defaultSetting())
                 .build();
         return memberRepository.save(newMember);
     }
 }
-

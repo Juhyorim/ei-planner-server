@@ -1,6 +1,5 @@
 package com.kihyaa.Eiplanner.service;
 
-import com.kihyaa.Eiplanner.domain.Task;
 import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.domain.History;
 import com.kihyaa.Eiplanner.dto.response.GetHistoryResponse;

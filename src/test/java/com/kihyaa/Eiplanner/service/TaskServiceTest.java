@@ -5,6 +5,7 @@ import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Setting;
 import com.kihyaa.Eiplanner.domain.Task;
 import com.kihyaa.Eiplanner.dto.*;
+import com.kihyaa.Eiplanner.service.auth.profile.dto.*;
 import com.kihyaa.Eiplanner.repository.MemberRepository;
 import com.kihyaa.Eiplanner.repository.TaskRepository;
 import jakarta.persistence.EntityManager;

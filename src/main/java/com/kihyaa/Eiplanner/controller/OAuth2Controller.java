@@ -1,11 +1,8 @@
 package com.kihyaa.Eiplanner.controller;
 
 import com.kihyaa.Eiplanner.domain.LoginType;
-import com.kihyaa.Eiplanner.dto.auth.GithubProfile;
-import com.kihyaa.Eiplanner.dto.auth.GoogleProfile;
-import com.kihyaa.Eiplanner.dto.auth.UserProfile;
-import com.kihyaa.Eiplanner.security.utils.OAuth2GithubClient;
-import com.kihyaa.Eiplanner.security.utils.OAuth2GoogleClient;
+import com.kihyaa.Eiplanner.service.auth.profile.CommonProfile;
+import com.kihyaa.Eiplanner.service.auth.client.OAuth2Client;
 import com.kihyaa.Eiplanner.service.auth.OAuth2Service;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -22,22 +20,17 @@ import java.io.IOException;
 public class OAuth2Controller {
     @Value("${frontendUrl}")
     private String frontendUrl;
-    private final OAuth2GoogleClient oAuth2GoogleClient;
-    private final OAuth2GithubClient oAuth2GithubClient;
+    private final Map<String, OAuth2Client> oAuth2Clients;
     private final OAuth2Service oAuth2Service;
 
-    @GetMapping("/google")
-    public void googleLogin(@RequestParam String code, HttpServletResponse response) throws IOException {
-        GoogleProfile googleProfile = oAuth2GoogleClient.oauthLogin(code);
-        String token = oAuth2Service.login(googleProfile, LoginType.GOOGLE);
-        response.sendRedirect(frontendUrl + "?token=" + token);
-    }
 
-    @GetMapping("/github")
-    public void githubLogin(@RequestParam String code, HttpServletResponse response) throws IOException {
-        GithubProfile githubProfile = oAuth2GithubClient.oauthLogin(code);
-        String token = oAuth2Service.login(githubProfile.toCommon(), LoginType.GITHUB);
-        log.info("OAuth2 token = {}", token);
+    @GetMapping("/{provider}")
+    public void oauthLogin(@PathVariable LoginType provider, @RequestParam String code, HttpServletResponse response) throws IOException {
+        OAuth2Client oAuth2Client = oAuth2Clients.get(provider.name());
+
+        CommonProfile profile = oAuth2Client.oauthLogin(code);
+        String token = oAuth2Service.login(profile, provider);
+
         response.sendRedirect(frontendUrl + "?token=" + token);
     }
 }
