@@ -12,4 +12,6 @@ public class GoogleProfile extends CommonProfile {
     private String id;
     private String name;
     private String email;
+    @JsonProperty("picture")
+    private String profileImage;
 }

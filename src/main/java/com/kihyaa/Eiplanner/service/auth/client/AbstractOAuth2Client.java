@@ -21,9 +21,10 @@ public abstract class AbstractOAuth2Client implements OAuth2Client {
 
     @Override
     public CommonProfile oauthLogin(String code) {
+        log.info("authcode = {}", code);
         String accessToken = requestAccessToken(code);
         CommonProfile commonProfile = getUserResource(accessToken);
-        return new CommonProfile(commonProfile.getId(), commonProfile.getName(), commonProfile.getEmail());
+        return new CommonProfile(commonProfile.getId(), commonProfile.getName(), commonProfile.getEmail(), commonProfile.getProfileImage());
     }
 
     // 액세스 토큰 요청 로직

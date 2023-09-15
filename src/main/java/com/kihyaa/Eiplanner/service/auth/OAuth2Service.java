@@ -42,6 +42,7 @@ public class OAuth2Service {
                 .loginType(loginType)
                 .email(commonProfile.getEmail())
                 .uid(commonProfile.getId())
+                .profileImgUrl(commonProfile.getProfileImage())
                 .setting(Setting.defaultSetting())
                 .build();
         return memberRepository.save(newMember);
