@@ -29,7 +29,7 @@ public class TaskService {
   private final EntityManager em;
 
   @Transactional
-  public Long makeTask(MakeTaskRequest request, Member member) {
+  public TaskResponse makeTask(MakeTaskRequest request, Member member) {
     Task prev = getFirstTaskPending(member);
 
     LocalDateTime dateTime = checkAndEditDateTime(request.getEndAt(), request.getIsTimeInclude());
@@ -45,9 +45,17 @@ public class TaskService {
     //prev와 연결
     connectTask(prev, task);
 
-    taskRepository.save(task);
+    task = taskRepository.save(task);
 
-    return task.getId();
+    return TaskResponse.builder()
+      .id(task.getId())
+      .title(task.getTitle())
+      .description(task.getDescription())
+      .endAt(task.getEndAt())
+      .isTimeInclude(task.getIsTimeInclude())
+      .isCompleted(task.getIsCompleted())
+      .eiType(task.getEiType())
+      .build();
   }
 
   private Task getFirstTaskPending(Member member) {
@@ -302,7 +310,7 @@ public class TaskService {
   }
 
   @Transactional
-  public void edit(Long taskId, TaskEditRequest request) {
+  public TaskResponse edit(Long taskId, TaskEditRequest request) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
@@ -312,6 +320,16 @@ public class TaskService {
       dateTime = dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0);
 
     task.edit(request.getTitle(), request.getDescription(), dateTime, (dateTime != null)? request.is_time_include(): false);
+
+    return TaskResponse.builder()
+      .id(task.getId())
+      .title(task.getTitle())
+      .description(task.getDescription())
+      .endAt(task.getEndAt())
+      .isTimeInclude(task.getIsTimeInclude())
+      .isCompleted(task.getIsCompleted())
+      .eiType(task.getEiType())
+      .build();
   }
 
   @Transactional(readOnly = true)
