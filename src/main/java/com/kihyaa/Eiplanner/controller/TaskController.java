@@ -23,10 +23,9 @@ public class TaskController {
 
   //일정 만들기
   @PostMapping
-  public ResponseEntity<ApiResponse> makeTask(@RequestBody @Valid MakeTaskRequest request, @CurrentMember Member member) {
-    taskService.makeTask(request, member);
+  public ResponseEntity makeTask(@RequestBody @Valid MakeTaskRequest request, @CurrentMember Member member) {
 
-    return ApiResponse.createResponse(MessageCode.SUCCESS_CREATE_RESOURCE, HttpStatus.CREATED);
+    return ResponseEntity.ok(taskService.makeTask(request, member));
   }
 
   //일정 타입, 위치 옮기기
@@ -57,10 +56,8 @@ public class TaskController {
 
   //일정 내용 수정
   @PutMapping("/{task_id}")
-  public ResponseEntity<ApiResponse> editTask(@PathVariable("task_id")Long taskId, @RequestBody @Valid TaskEditRequest request) {
-    taskService.edit(taskId, request);
-
-    return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
+  public ResponseEntity editTask(@PathVariable("task_id")Long taskId, @RequestBody @Valid TaskEditRequest request) {
+    return ResponseEntity.ok(taskService.edit(taskId, request));
   }
 
   //일정 상세보기

@@ -12,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TaskMoveRequest {
-
   private EIType ei_type;
   private List<Long> tasks;
 

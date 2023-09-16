@@ -119,10 +119,10 @@ public class TaskServiceTest {
     MakeTaskRequest makeTaskRequest3 = new MakeTaskRequest(title, description, LocalDateTime.now(), false);
     MakeTaskRequest makeTaskRequest4 = new MakeTaskRequest(title, description, LocalDateTime.now(), true);
 
-    taskId1 = taskService.makeTask(makeTaskRequest1, member);
-    taskId2 = taskService.makeTask(makeTaskRequest2, member);
-    taskId3 = taskService.makeTask(makeTaskRequest3, member);
-    taskId4 = taskService.makeTask(makeTaskRequest4, member);
+    taskId1 = taskService.makeTask(makeTaskRequest1, member).getId();
+    taskId2 = taskService.makeTask(makeTaskRequest2, member).getId();
+    taskId3 = taskService.makeTask(makeTaskRequest3, member).getId();
+    taskId4 = taskService.makeTask(makeTaskRequest4, member).getId();
   }
 
   @DisplayName("일정 사분면 이동 테스트")
@@ -421,6 +421,26 @@ public class TaskServiceTest {
     assertEquals(taskId3, pending.get(2).getId());
 
     assertEquals(taskId4, im_ur.get(0).getId());
+  }
+
+  @DisplayName("일정 이동: 변경사항 없음")
+  @Transactional
+  @Order(12)
+  @Test
+  void moveTaskNothingHappend() {
+    make4Task();
+
+    List<Long> lst = makeDestinationOrderList(new Long[]{taskId1, taskId2, taskId3, taskId4});
+
+    taskService.move(taskId4, new TaskMoveRequest(EIType.PENDING, lst), member);
+
+    DashBoardResponse allTask = taskService.getAllTask(member);
+    List<TaskResponse> pending = allTask.getPending().getTasks();
+
+    assertEquals(taskId1, pending.get(0).getId());
+    assertEquals(taskId2, pending.get(1).getId());
+    assertEquals(taskId3, pending.get(2).getId());
+    assertEquals(taskId4, pending.get(3).getId());
   }
 
 
