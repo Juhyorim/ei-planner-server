@@ -361,7 +361,7 @@ public class TaskService {
   }
 
   @Transactional
-  public void cleanCompleteTasks(Member member) {
+  public CompleteTaskList cleanCompleteTasks(Member member) {
     //완료됐으면서 + hisotry가 아닌애들 다 보내기
     List<Task> taskList = taskRepository.findByMemberAndIsCompletedIsTrueAndIsHistoryIsFalse(member);
 
@@ -386,6 +386,8 @@ public class TaskService {
 
       connectTask(prev, next);
     }
+
+    return CompleteTaskList.convert(taskList);
   }
 
   @Transactional

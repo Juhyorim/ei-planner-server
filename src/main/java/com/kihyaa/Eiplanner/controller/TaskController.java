@@ -78,9 +78,8 @@ public class TaskController {
 
   //대시보드 완료 일정 정리
   @PutMapping("/tasks/clean")
-  public ResponseEntity<ApiResponse> cleanCompleteTasks(@CurrentMember Member member) {
-    taskService.cleanCompleteTasks(member);
+  public ResponseEntity cleanCompleteTasks(@CurrentMember Member member) {
 
-    return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
+    return ResponseEntity.ok(taskService.cleanCompleteTasks(member));
   }
 }
