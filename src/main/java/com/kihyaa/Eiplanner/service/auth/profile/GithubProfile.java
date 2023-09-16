@@ -17,6 +17,9 @@ public class GithubProfile extends CommonProfile {
     @JsonProperty("email")
     private String email;
 
+    @JsonProperty("avatar_url")
+    private String profileImage;
+
     @JsonProperty("html_url")
     private String githubLink;
 }
