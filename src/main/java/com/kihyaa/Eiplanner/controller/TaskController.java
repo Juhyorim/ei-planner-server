@@ -32,9 +32,12 @@ public class TaskController {
   //일정 타입, 위치 옮기기
   @PutMapping("/{task_id}/move")
   public ResponseEntity moveTask(@PathVariable("task_id")Long taskId, @RequestBody TaskMoveRequest taskList, @CurrentMember Member member) {
-    taskService.move(taskId, taskList, member);
+    boolean move = taskService.move(taskId, taskList, member);
 
-    return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
+    if (move)
+      return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
+    else
+      return ApiResponse.createResponse(MessageCode.SUCCESS_BUT_NOTHING_HAPPENDED, HttpStatus.OK);
   }
 
   //일정 삭제

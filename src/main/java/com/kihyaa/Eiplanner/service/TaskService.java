@@ -127,8 +127,9 @@ public class TaskService {
     return sortedList;
   }
 
+  //return: 리소스가 갱신되었으면 true, 아니면 false, 잘못되면 excpetion
   @Transactional
-  public void move(Long taskId, TaskMoveRequest taskList, Member member) {
+  public boolean move(Long taskId, TaskMoveRequest taskList, Member member) {
     Task findTask = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
@@ -151,11 +152,42 @@ public class TaskService {
       futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
 
     //입력받은 순서배열 일치여부 확인 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    List<Task> taskListTypeEquals = taskRepository.findByMemberAndEiTypeAndIsHistoryIsFalse(member, taskList.getEi_type());
+
+    //(0)이동하지 않는 경우인가
+    for (Task t: taskListTypeEquals) {
+      if (t.getId() == taskId) {
+        //목적지 배열이 이동하지 않는 경우이면 이동 x
+        boolean prevEqual = false;
+        boolean nextEqual = false;
+
+        if (t.getPrev() == null) {
+          if (futurePrev == null)
+            prevEqual = true;
+        } else {
+          if (futurePrev != null && t.getPrev().getId().equals(futurePrev.getId()))
+            prevEqual = true;
+        }
+
+        if (t.getNext() == null) {
+          if (futureNext == null)
+            nextEqual = true;
+        } else {
+          if (futureNext != null && t.getNext().getId().equals(futureNext.getId()))
+            nextEqual = true;
+        }
+
+        if (prevEqual && nextEqual)
+          return false;
+
+        break;
+      }
+    }
+
     //(1)prev와 next가 없는 경우 진짜없나
     if (tasks.size() == 1) {
       //타입에 맞는 모든 task 가져옴
-      List<Task> typeList = taskRepository.findByMemberAndEiTypeAndIsHistoryIsFalse(member, taskList.getEi_type());
-      if (typeList.size() != 0)
+      if (taskListTypeEquals.size() != 0)
         throw new InputMismatchException("입력받은 일정 배열이 이상합니다2");
     }
 
@@ -225,6 +257,8 @@ public class TaskService {
 
     findTask.setPrevTask(futurePrev);
     findTask.setNextTask(futureNext);
+
+    return true;
   }
 
   private static int findTaskIdx(Task findTask, List<Long> tasks) {
