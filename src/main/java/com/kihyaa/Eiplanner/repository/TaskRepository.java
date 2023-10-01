@@ -15,7 +15,8 @@ import java.util.Optional;
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
 //  List<Task> findByMemberAndEiTypeAndNextIsNullAndIsHistoryIsFalse(Member member, EIType eiType);
-  List<Task> findByMemberAndIsHistoryIsFalseOrderByEiType(Member member);
+  List<Task> findByMemberAndIsHistoryIsFalseOrderBySeqNumAsc(Member member);
+
   List<Task> findByMemberAndEiTypeAndIsHistoryIsFalse(Member member, EIType eiType);
 
   @Query("select max(t.seqNum) from Task t where t.member = ?1 and t.eiType = ?2 and t.isHistory = false")
