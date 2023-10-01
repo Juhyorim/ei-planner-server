@@ -43,13 +43,8 @@ public class Task {
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime completedAt = null;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="next_task_id")
-    private Task next = null;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="prev_task_id")
-    private Task prev = null;
+    @Column(name = "seq_num")
+    private Long seqNum = 0L;
 
     private Boolean isHistory = false;
 
@@ -70,20 +65,13 @@ public class Task {
     }
 
     @Builder
-    public Task(Member member, String title, String description, LocalDateTime endAt, boolean isTimeInclude) {
+    public Task(Member member, String title, String description, LocalDateTime endAt, boolean isTimeInclude, Long seqNum) {
         this.member = member;
         this.title = title;
         this.description = description;
         this.endAt = endAt;
         this.isTimeInclude = isTimeInclude;
-    }
-
-    public void setNextTask(Task task) {
-        this.next = task;
-    }
-
-    public void setPrevTask(Task task) {
-        this.prev = task;
+        this.seqNum = seqNum;
     }
 
     public void setEiType(EIType eiType) {
