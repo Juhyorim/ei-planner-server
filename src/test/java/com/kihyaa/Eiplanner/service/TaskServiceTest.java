@@ -502,32 +502,32 @@ public class TaskServiceTest {
     assertEquals(false, task3.getIsHistory());
   }
 
-//  @DisplayName("일정 정리하기 테스트")
-//  @Transactional
-//  @Order(15)
-//  @Test
-//  void clearCompleteTask() throws InterruptedException {
-//    make4Task();
-//
-//    taskService.editCheck(taskId2, new TaskCheckDto(true));
-//    Thread.sleep(1000);
-//    taskService.editCheck(taskId3, new TaskCheckDto(true));
-//
-//    taskService.cleanCompleteTasks(member);
-//
-//    List<TaskResponse> tasks = taskService.getAllTask(member).getPending().getTasks();
-//    for (TaskResponse response: tasks) {
-//      assertNotEquals(taskId2, response.getId());
-//      assertNotEquals(taskId3, response.getId());
-//    }
-//
-//    //히스토리 잘 들어갔는지 확인
-//    List<HistoryTaskDto> historys = historyService.getHistory(member.getId(), PageRequest.of(0, 2)).getTasks();
-//
-//    //체크 완료된 순 DESC 정렬!
-//    assertEquals(taskId2, historys.get(1).getId());
-//    assertEquals(taskId3, historys.get(0).getId());
-//  }
+  @DisplayName("일정 정리하기 테스트")
+  @Transactional
+  @Order(15)
+  @Test
+  void clearCompleteTask() throws InterruptedException {
+    make4Task();
+
+    taskService.editCheck(taskId2, new TaskCheckDto(true));
+    Thread.sleep(1000);
+    taskService.editCheck(taskId3, new TaskCheckDto(true));
+
+    taskService.cleanCompleteTasks(member);
+
+    List<TaskResponse> tasks = taskService.getAllTask(member).getPending().getTasks();
+    for (TaskResponse response: tasks) {
+      assertNotEquals(taskId2, response.getId());
+      assertNotEquals(taskId3, response.getId());
+    }
+
+    //히스토리 잘 들어갔는지 확인
+    List<HistoryTaskDto> historys = historyService.getHistory(member.getId(), PageRequest.of(0, 2)).getTasks();
+
+    //체크 완료된 순 DESC 정렬!
+    assertEquals(taskId2, historys.get(1).getId());
+    assertEquals(taskId3, historys.get(0).getId());
+  }
 
   @DisplayName("일정 삭제 테스트: 첫 번째 위치")
   @Transactional

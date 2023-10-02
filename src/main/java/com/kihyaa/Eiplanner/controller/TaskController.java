@@ -76,10 +76,10 @@ public class TaskController {
     return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
   }
 
-//  //대시보드 완료 일정 정리
-//  @PutMapping("/tasks/clean")
-//  public ResponseEntity cleanCompleteTasks(@CurrentMember Member member) {
-//
-//    return ResponseEntity.ok(taskService.cleanCompleteTasks(member));
-//  }
+  //대시보드 완료 일정 정리
+  @PutMapping("/tasks/clean")
+  public ResponseEntity cleanCompleteTasks(@CurrentMember Member member) {
+
+    return ResponseEntity.ok(taskService.cleanCompleteTasks(member));
+  }
 }

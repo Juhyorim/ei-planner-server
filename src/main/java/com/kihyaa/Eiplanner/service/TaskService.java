@@ -1,6 +1,7 @@
 package com.kihyaa.Eiplanner.service;
 
 import com.kihyaa.Eiplanner.domain.EIType;
+import com.kihyaa.Eiplanner.domain.History;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Task;
 import com.kihyaa.Eiplanner.dto.*;
@@ -279,36 +280,17 @@ public class TaskService {
     task.check(dto.getIs_checked());
   }
 
-//  @Transactional
-//  public CompleteTaskList cleanCompleteTasks(Member member) {
-//    //완료됐으면서 + hisotry가 아닌애들 다 보내기
-//    List<Task> taskList = taskRepository.findByMemberAndIsCompletedIsTrueAndIsHistoryIsFalse(member);
-//
-//    for (Task task: taskList) {
-//      task = taskRepository.findById(task.getId()).orElseThrow(() -> new InternalServerErrorException("asdf"));
-//      historyRepository.save(History.makeHistory(member, task));
-//
-//      Task prev = task.getPrev();
-//      Task next = task.getNext();
-//
-//      task.setPrevTask(null);
-//      task.setNextTask(null);
-//
-//      //영속성 컨텍스트 비우가
-//      em.flush();
-//      em.clear();
-//
-//      if (prev != null)
-//        prev = taskRepository.findById(prev.getId()).orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
-//      if (next != null)
-//        next = taskRepository.findById(next.getId()).orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
-//
-//      connectTask(prev, next);
-//    }
-//
-//    return CompleteTaskList.convert(taskList);
-//  }
-//
+  @Transactional
+  public CompleteTaskList cleanCompleteTasks(Member member) {
+    //완료됐으면서 + hisotry가 아닌애들 다 보내기
+    List<Task> taskList = taskRepository.findByMemberAndIsCompletedIsTrueAndIsHistoryIsFalse(member);
+
+    for (Task task: taskList)
+      historyRepository.save(History.makeHistory(member, task));
+
+    return CompleteTaskList.convert(taskList);
+  }
+
 //  @Transactional
 //  public void scheduleTaskTypeRotation(LocalDateTime now){
 //
