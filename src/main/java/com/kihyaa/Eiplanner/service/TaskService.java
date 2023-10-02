@@ -10,7 +10,6 @@ import com.kihyaa.Eiplanner.exception.exceptions.InternalServerErrorException;
 import com.kihyaa.Eiplanner.exception.exceptions.NotFoundException;
 import com.kihyaa.Eiplanner.repository.HistoryRepository;
 import com.kihyaa.Eiplanner.repository.TaskRepository;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,14 +25,14 @@ public class TaskService {
 
   private final TaskRepository taskRepository;
   private final HistoryRepository historyRepository;
-  private final EntityManager em;
 
   @Transactional
   public TaskResponse makeTask(MakeTaskRequest request, Member member) {
     Long lastSeqNum = taskRepository.findLastSeqNum(member, EIType.PENDING)
       .orElseGet(() -> 0L);
-    Long currSeqNum = lastSeqNum + 11;
+    Long currSeqNum = lastSeqNum + 11; //seqnum은 11부터 시작
 
+    //dateTime과 시간 설정
     LocalDateTime dateTime = checkAndEditDateTime(request.getEndAt(), request.getIsTimeInclude());
 
     Task task = Task.builder()
@@ -47,15 +46,7 @@ public class TaskService {
 
     task = taskRepository.save(task);
 
-    return TaskResponse.builder()
-      .id(task.getId())
-      .title(task.getTitle())
-      .description(task.getDescription())
-      .endAt(task.getEndAt())
-      .isTimeInclude(task.getIsTimeInclude())
-      .isCompleted(task.getIsCompleted())
-      .eiType(task.getEiType())
-      .build();
+    return TaskResponse.convert(task);
   }
 
   private LocalDateTime checkAndEditDateTime(LocalDateTime dateTime, boolean isTimeInclude) {
@@ -85,38 +76,47 @@ public class TaskService {
         .add(task);
     }
 
-    //next next 따라 정렬
-    Map<EIType, List<Task>> sortedTaskMap = new HashMap<>();
-
-    for (EIType eiType: taskMap.keySet())
-      sortedTaskMap.put(eiType, taskMap.get(eiType));
-
-    return DashBoardResponse.make(sortedTaskMap);
+    return DashBoardResponse.make(taskMap);
   }
 
   //return: 리소스가 갱신되었으면 true, 아니면 false, 잘못되면 excpetion
   //(1)이동할 task의 id와 (2)내가 이동한 목적지의 task 리스트를 입력으로 받음
   @Transactional
-  public boolean move(Long taskId, TaskMoveRequest taskList, Member member) {
+  public boolean move(Long taskId, TaskMoveRequest taskList, Member member) throws InputMismatchException {
     Task findTask = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-    //목적지의 task 리스트 분석 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    //<<목적지의 task 리스트 분석>>
     List<Long> inputTaskIdList = taskList.getTasks();
-    int idx = findTaskIdx(findTask, inputTaskIdList);
+    Integer taskIdx = findTaskIdx(findTask, inputTaskIdList); //목적지 배열에 내가 없으면 InputMisMatchException 발생
 
-    //내가 없으면 - InputMismatchException
-    if (idx == -1)
-      throw new InputMismatchException("입력받은 일정 배열이 이상합니다1");
-
-    //실제 값과 비교 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     List<Task> typeEqualsTaskList = taskRepository.findByMemberAndEiTypeAndIsHistoryIsFalseOrderBySeqNumAsc(member, taskList.getEi_type());
-    
+
+    //아무 이동도 없는지 확인 + 입력받은 배열과 데이터베이스 배열이 동일한지 검증
+    if (isDontMove(taskId, inputTaskIdList, typeEqualsTaskList))
+      return false;
+
+    //<<순서번호 부여>>
+    Long seqNum = 0L;
+
+    if (taskIdx == 0)
+      seqNum = getSeqNumFirstPos(typeEqualsTaskList); //맨 앞 삽입
+    else if (taskIdx == inputTaskIdList.size()-1)
+      seqNum = getSeqNumLastPos(typeEqualsTaskList); //맨 뒤 삽입
+    else
+      seqNum = getSeqNumCenterPos(inputTaskIdList, taskIdx, typeEqualsTaskList); //중간 삽입
+
+    findTask.setSeqNum(seqNum);
+    findTask.setEiType(taskList.getEi_type());
+
+    return true;
+  }
+
+  private static boolean isDontMove(Long taskId, List<Long> inputTaskIdList, List<Task> typeEqualsTaskList) {
     boolean equalsMove = false; //이동안하는 경우(같은 곳으로 이동한 경우)인지 확인
     int j = 0;
 
-    //입력받은 배열과 실제 디비 일치하는지 확인
-    for (int i =0; i<inputTaskIdList.size(); i++) {
+    for (int i = 0; i< inputTaskIdList.size(); i++) {
       Long inputTaskId = inputTaskIdList.get(i);
       Long matchTaskId = null;
       if (j < typeEqualsTaskList.size())
@@ -144,58 +144,56 @@ public class TaskService {
       j++;
     }
 
-    if (equalsMove)
-      return false;
+    return equalsMove;
+  }
 
-    //검증완료, 중간 삽입 작업 수행 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-    //맨 앞 삽입일 경우
-    if (idx == 0) {
-      //빈 배열 첫 삽입
-      if (typeEqualsTaskList.size() == 0) {
-        findTask.setSeqNum(11L);
+  private Long getSeqNumCenterPos(List<Long> inputTaskIdList, Integer taskIdx, List<Task> typeEqualsTaskList) {
+    Long mySeqNum;
+    Task prev = taskRepository.findById(inputTaskIdList.get(taskIdx -1))
+      .orElseThrow(() -> new InternalServerErrorException("오류"));
+
+    Task next = taskRepository.findById(inputTaskIdList.get(taskIdx +1))
+      .orElseThrow(() -> new InternalServerErrorException("오류"));
+
+    Long prevSeqNum = prev.getSeqNum();
+    Long nextSeqNum = next.getSeqNum();
+
+    if (nextSeqNum-prevSeqNum == 1) {
+      pushOneSeqNum(taskIdx, typeEqualsTaskList);
+      mySeqNum = nextSeqNum;
+    } else {
+      mySeqNum = (prevSeqNum + 1 + nextSeqNum)/2;
+    }
+
+    return mySeqNum;
+  }
+
+  private static Long getSeqNumLastPos(List<Task> typeEqualsTaskList) {
+    Long lastSeqNum = typeEqualsTaskList.get(typeEqualsTaskList.size() - 1).getSeqNum();
+    return lastSeqNum+11;
+  }
+
+  private Long getSeqNumFirstPos(List<Task> typeEqualsTaskList) {
+    Long mySeqNum;
+    //(1)빈 배열 첫 삽입일 경우
+    if (typeEqualsTaskList.size() == 0) {
+      mySeqNum = 11L;
+    }
+    else {
+      Long seqNum = typeEqualsTaskList.get(0).getSeqNum();
+      if (seqNum == 0) { //seqnum 값이 0인 경우가 있을 경우
+        pushOneSeqNum(0, typeEqualsTaskList); //뒤로 한 칸씩 땡김
+        mySeqNum = 0L;
       } else {
-        Long seqNum = typeEqualsTaskList.get(0).getSeqNum();
-        if (seqNum == 0) { //seqnum 값이 0인 경우가 있을 경우
-          plusOneSeqNum(0, typeEqualsTaskList); //뒤로 한 칸씩 땡김
-          findTask.setSeqNum(0L);
-        } else {
-          findTask.setSeqNum(seqNum/2); //중간값으로 삽입
-        }
+        mySeqNum = seqNum/2; //중간값으로 삽입
       }
     }
-    else if (idx == inputTaskIdList.size()-1) { //맨 뒤 삽입일 경우
-      Long lastSeqNum = typeEqualsTaskList.get(typeEqualsTaskList.size() - 1).getSeqNum();
-      findTask.setSeqNum(lastSeqNum+11);
-    }
-    else { //중간 삽입
-//      Long prevSeqNum = typeEqualsTaskList.get(idx-1).getSeqNum();
-//      Long nextSeqNum = typeEqualsTaskList.get(idx).getSeqNum();
 
-      Task prev = taskRepository.findById(inputTaskIdList.get(idx-1))
-        .orElseThrow(() -> new InternalServerErrorException("오류"));
-
-      Task next = taskRepository.findById(inputTaskIdList.get(idx+1))
-        .orElseThrow(() -> new InternalServerErrorException("오류"));
-
-      Long prevSeqNum = prev.getSeqNum();
-      Long nextSeqNum = next.getSeqNum();
-
-      if (nextSeqNum-prevSeqNum == 1) {
-        plusOneSeqNum(idx, typeEqualsTaskList);
-        findTask.setSeqNum(nextSeqNum);
-      } else {
-        findTask.setSeqNum((prevSeqNum + 1 + nextSeqNum)/2);
-      }
-    }
-
-    //타입수정
-    findTask.setEiType(taskList.getEi_type());
-
-    return true;
+    return mySeqNum;
   }
 
   //인덱스 idx 값부터 한 칸씩 뒤로 미는 함수
-  private void plusOneSeqNum(int idx, List<Task> taskListTypeEquals) {
+  private void pushOneSeqNum(int idx, List<Task> taskListTypeEquals) {
     Task task = taskListTypeEquals.get(idx);
 
     task.setSeqNum(task.getSeqNum()+1);
@@ -212,19 +210,24 @@ public class TaskService {
     }
   }
 
-  private static int findTaskIdx(Task findTask, List<Long> tasks) {
+  private static Integer findTaskIdx(Task findTask, List<Long> tasks) {
     //나 찾기
     for (int i = 0; i< tasks.size(); i++) {
       if (tasks.get(i).equals(findTask.getId()))
         return i;
     }
-    return -1;
+
+    //목적지 배열에 내가 없으면 - InputMismatchException
+    throw new InputMismatchException("입력받은 일정 배열이 이상합니다1");
   }
 
   @Transactional
   public void delete(Long taskId, Member member) {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+    
+    if (!member.getId().equals(task.getMember().getId()))
+      throw new ForbiddenException("일정에 대한 삭제 권한이 없습니다");
 
     taskRepository.delete(task);
   }
@@ -257,9 +260,8 @@ public class TaskService {
     Task task = taskRepository.findById(taskId)
       .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
 
-    if (!task.getMember().getId().equals(member.getId())) {
+    if (!task.getMember().getId().equals(member.getId()))
       throw new ForbiddenException("일정에 대한 조회 권한이 없습니다");
-    }
 
     return TaskResponse.builder()
       .id(taskId)

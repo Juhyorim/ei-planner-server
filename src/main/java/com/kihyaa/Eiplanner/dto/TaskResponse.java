@@ -30,6 +30,18 @@ public class TaskResponse {
   @JsonProperty("ei_type")
   private EIType eiType;
 
+  public static TaskResponse convert(Task task) {
+    return TaskResponse.builder()
+      .id(task.getId())
+      .title(task.getTitle())
+      .description(task.getDescription())
+      .endAt(task.getEndAt())
+      .isTimeInclude(task.getIsTimeInclude())
+      .isCompleted(task.getIsCompleted())
+      .eiType(task.getEiType())
+      .build();
+  }
+
   public static List<TaskResponse> convert(List<Task> taskList) {
     List<TaskResponse> responses = new ArrayList<>();
     for (Task task: taskList) {
