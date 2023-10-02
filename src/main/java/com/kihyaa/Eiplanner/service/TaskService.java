@@ -1,7 +1,6 @@
 package com.kihyaa.Eiplanner.service;
 
 import com.kihyaa.Eiplanner.domain.EIType;
-import com.kihyaa.Eiplanner.domain.History;
 import com.kihyaa.Eiplanner.domain.Member;
 import com.kihyaa.Eiplanner.domain.Task;
 import com.kihyaa.Eiplanner.dto.*;
@@ -31,7 +30,7 @@ public class TaskService {
   @Transactional
   public TaskResponse makeTask(MakeTaskRequest request, Member member) {
     Long lastSeqNum = taskRepository.findLastSeqNum(member, EIType.PENDING)
-      .orElseGet(() -> -11L);
+      .orElseGet(() -> 0L);
     Long currSeqNum = lastSeqNum + 11;
 
     LocalDateTime dateTime = checkAndEditDateTime(request.getEndAt(), request.getIsTimeInclude());
@@ -94,148 +93,132 @@ public class TaskService {
     return DashBoardResponse.make(sortedTaskMap);
   }
 
-//  //return: 리소스가 갱신되었으면 true, 아니면 false, 잘못되면 excpetion
-//  @Transactional
-//  public boolean move(Long taskId, TaskMoveRequest taskList, Member member) {
-//    Task findTask = taskRepository.findById(taskId)
-//      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
-//
-//    //목적지의 task 리스트 분석
-//    List<Long> tasks = taskList.getTasks();
-//
-//    int idx = findTaskIdx(findTask, tasks);
-//
-//    //내가 없으면 - InputMismatchException
-//    if (idx == -1)
-//      throw new InputMismatchException("입력받은 일정 배열이 이상합니다1");
-//
-//    Task futurePrev = null;
-//    Task futureNext = null;
-//
-//    if (idx-1 >= 0)
-//      futurePrev = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
-//
-//    if (idx+1 <tasks.size())
-//      futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
-//
-//    //입력받은 순서배열 일치여부 확인 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-//    List<Task> taskListTypeEquals = taskRepository.findByMemberAndEiTypeAndIsHistoryIsFalse(member, taskList.getEi_type());
-//
-//    //(0)이동하지 않는 경우인가
-//    for (Task t: taskListTypeEquals) {
-//      if (t.getId() == taskId) {
-//        //목적지 배열이 이동하지 않는 경우이면 이동 x
-//        boolean prevEqual = false;
-//        boolean nextEqual = false;
-//
-//        if (t.getPrev() == null) {
-//          if (futurePrev == null)
-//            prevEqual = true;
-//        } else {
-//          if (futurePrev != null && t.getPrev().getId().equals(futurePrev.getId()))
-//            prevEqual = true;
-//        }
-//
-//        if (t.getNext() == null) {
-//          if (futureNext == null)
-//            nextEqual = true;
-//        } else {
-//          if (futureNext != null && t.getNext().getId().equals(futureNext.getId()))
-//            nextEqual = true;
-//        }
-//
-//        if (prevEqual && nextEqual)
-//          return false;
-//
-//        break;
-//      }
-//    }
-//
-//    //(1)prev와 next가 없는 경우 진짜없나
-//    if (tasks.size() == 1) {
-//      //타입에 맞는 모든 task 가져옴
-//      if (taskListTypeEquals.size() != 0)
-//        throw new InputMismatchException("입력받은 일정 배열이 이상합니다2");
-//    }
-//
-//    //(2)prev가 없는 경우 next의 prev가 진짜 없나
-//    if (idx == 0 && tasks.size() > 1) {
-//      if (futureNext.getPrev() != null)
-//        throw new InputMismatchException("입력받은 일정 배열이 이상합니다3");
-//    }
-//
-//    //(3)next가 없는 경우 prev의 next가 진짜 없나
-//    if (idx == tasks.size()-1 && tasks.size() > 1) {
-//      if (futurePrev.getNext() != null)
-//        throw new InputMismatchException("입력받은 일정 배열이 이상합니다4");
-//    }
-//
-//    //(4)다 있는 경우 둘이 연결되어있나
-//    if (idx > 0 && idx < tasks.size()-1) {
-//      if (futurePrev.getId()!= futureNext.getPrev().getId())
-//        throw new InputMismatchException("입력받은 일정 배열이 이상합니다5");
-//    }
-//
-//    //검증완료, 연결리스트 연결작업 수행 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-//    Task pastPrev = findTask.getPrev();
-//    Task pastNext = findTask.getNext();
-//
-//    //일단 연결고리 다 끊기
-//    findTask.setPrevTask(null);
-//    findTask.setNextTask(null);
-//
-//    if (futurePrev != null)
-//      futurePrev.setNextTask(null);
-//    if (futureNext != null)
-//      futureNext.setPrevTask(null);
-//
-//    if (pastPrev != null)
-//      pastPrev.setNextTask(null);
-//    if (pastNext != null)
-//      pastNext.setPrevTask(null);
-//
-//    em.flush();
-//    em.clear();
-//
-//    findTask = taskRepository.findById(taskId)
-//      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
-//
-//    if(pastPrev != null)
-//      pastPrev = taskRepository.findById(pastPrev.getId()).orElseThrow(() -> new NotFoundException("asdf"));
-//    if(pastNext != null)
-//      pastNext = taskRepository.findById(pastNext.getId()).orElseThrow(() -> new NotFoundException("asdf"));
-//
-//    //이전꺼끼리 연결
-//    connectTask(pastPrev, pastNext);
-//
-//    //future랑 findTask 연결
-//    if (futurePrev != null) {
-//      futurePrev = taskRepository.findById(tasks.get(idx-1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
-//      futurePrev.setNextTask(findTask);
-//    }
-//
-//    if (futureNext != null) {
-//      futureNext = taskRepository.findById(tasks.get(idx+1)).orElseThrow(() -> new InputMismatchException("배열에 포함된 일정을 찾을 수 없습니다"));
-//      futureNext.setPrevTask(findTask);
-//    }
-//
-//    //findTask 연결, 타입수정
-//    findTask.setEiType(taskList.getEi_type());
-//
-//    findTask.setPrevTask(futurePrev);
-//    findTask.setNextTask(futureNext);
-//
-//    return true;
-//  }
-//
-//  private static int findTaskIdx(Task findTask, List<Long> tasks) {
-//    //나 찾기
-//    for (int i = 0; i< tasks.size(); i++) {
-//      if (tasks.get(i).equals(findTask.getId()))
-//        return i;
-//    }
-//    return -1;
-//  }
+  //return: 리소스가 갱신되었으면 true, 아니면 false, 잘못되면 excpetion
+  //(1)이동할 task의 id와 (2)내가 이동한 목적지의 task 리스트를 입력으로 받음
+  @Transactional
+  public boolean move(Long taskId, TaskMoveRequest taskList, Member member) {
+    Task findTask = taskRepository.findById(taskId)
+      .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다"));
+
+    //목적지의 task 리스트 분석 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    List<Long> inputTaskIdList = taskList.getTasks();
+    int idx = findTaskIdx(findTask, inputTaskIdList);
+
+    //내가 없으면 - InputMismatchException
+    if (idx == -1)
+      throw new InputMismatchException("입력받은 일정 배열이 이상합니다1");
+
+    //실제 값과 비교 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    List<Task> typeEqualsTaskList = taskRepository.findByMemberAndEiTypeAndIsHistoryIsFalseOrderBySeqNumAsc(member, taskList.getEi_type());
+    
+    boolean equalsMove = false; //이동안하는 경우(같은 곳으로 이동한 경우)인지 확인
+    int j = 0;
+
+    //입력받은 배열과 실제 디비 일치하는지 확인
+    for (int i =0; i<inputTaskIdList.size(); i++) {
+      Long inputTaskId = inputTaskIdList.get(i);
+      Long matchTaskId = null;
+      if (j < typeEqualsTaskList.size())
+        matchTaskId = typeEqualsTaskList.get(j).getId();
+
+      if (inputTaskId == taskId) {
+        //(1)이동 안하는 경우인지 확인
+        if (matchTaskId != null && matchTaskId == inputTaskId) {
+          equalsMove = true;
+          j++;
+        }
+
+        continue;
+      }
+
+      //(2)같은 type으로 이동한 경우 -> taskId와 같은 거 스킵
+      if (matchTaskId == taskId) {
+        j++;
+        matchTaskId = typeEqualsTaskList.get(j).getId();
+      }
+
+      if (matchTaskId != inputTaskId)
+        throw new InputMismatchException("입력받은 배열이 이상합니다");
+
+      j++;
+    }
+
+    if (equalsMove)
+      return false;
+
+    //검증완료, 중간 삽입 작업 수행 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    //맨 앞 삽입일 경우
+    if (idx == 0) {
+      //빈 배열 첫 삽입
+      if (typeEqualsTaskList.size() == 0) {
+        findTask.setSeqNum(11L);
+      } else {
+        Long seqNum = typeEqualsTaskList.get(0).getSeqNum();
+        if (seqNum == 0) { //seqnum 값이 0인 경우가 있을 경우
+          plusOneSeqNum(0, typeEqualsTaskList); //뒤로 한 칸씩 땡김
+          findTask.setSeqNum(0L);
+        } else {
+          findTask.setSeqNum(seqNum/2); //중간값으로 삽입
+        }
+      }
+    }
+    else if (idx == inputTaskIdList.size()-1) { //맨 뒤 삽입일 경우
+      Long lastSeqNum = typeEqualsTaskList.get(typeEqualsTaskList.size() - 1).getSeqNum();
+      findTask.setSeqNum(lastSeqNum+11);
+    }
+    else { //중간 삽입
+//      Long prevSeqNum = typeEqualsTaskList.get(idx-1).getSeqNum();
+//      Long nextSeqNum = typeEqualsTaskList.get(idx).getSeqNum();
+
+      Task prev = taskRepository.findById(inputTaskIdList.get(idx-1))
+        .orElseThrow(() -> new InternalServerErrorException("오류"));
+
+      Task next = taskRepository.findById(inputTaskIdList.get(idx+1))
+        .orElseThrow(() -> new InternalServerErrorException("오류"));
+
+      Long prevSeqNum = prev.getSeqNum();
+      Long nextSeqNum = next.getSeqNum();
+
+      if (nextSeqNum-prevSeqNum == 1) {
+        plusOneSeqNum(idx, typeEqualsTaskList);
+        findTask.setSeqNum(nextSeqNum);
+      } else {
+        findTask.setSeqNum((prevSeqNum + 1 + nextSeqNum)/2);
+      }
+    }
+
+    //타입수정
+    findTask.setEiType(taskList.getEi_type());
+
+    return true;
+  }
+
+  //인덱스 idx 값부터 한 칸씩 뒤로 미는 함수
+  private void plusOneSeqNum(int idx, List<Task> taskListTypeEquals) {
+    Task task = taskListTypeEquals.get(idx);
+
+    task.setSeqNum(task.getSeqNum()+1);
+    long prevSeqNum = task.getSeqNum();
+    idx++;
+
+   for (int i = idx; i<taskListTypeEquals.size(); i++) {
+      task = taskListTypeEquals.get(i);
+      if (task.getSeqNum() != prevSeqNum)
+        break;
+
+      task.setSeqNum(prevSeqNum + 1);
+      prevSeqNum++;
+    }
+  }
+
+  private static int findTaskIdx(Task findTask, List<Long> tasks) {
+    //나 찾기
+    for (int i = 0; i< tasks.size(); i++) {
+      if (tasks.get(i).equals(findTask.getId()))
+        return i;
+    }
+    return -1;
+  }
 
   @Transactional
   public void delete(Long taskId, Member member) {

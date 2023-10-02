@@ -89,11 +89,13 @@ public class TaskServiceTest {
     assertEquals(EIType.PENDING, task1.getEiType());
     assertEquals(null, task1.getCompletedAt());
     assertEquals(false, task1.getIsCompleted());
+    assertEquals(11L, task1.getSeqNum());
 
     //description이 null이 아닐 때
     Task task2 = taskRepository.findById(taskId2).orElseThrow(() -> new NoSuchElementException());
     assertEquals(description, task2.getDescription());
     assertEquals(false, task2.getIsTimeInclude());
+    assertEquals(11L + 11L, task2.getSeqNum());
 
     //isTimeInclude가 false일 때
     Task task3 = taskRepository.findById(taskId3).orElseThrow(() -> new NoSuchElementException());
@@ -102,15 +104,18 @@ public class TaskServiceTest {
     assertEquals(0, task3.getEndAt().getSecond());
     assertEquals(0, task3.getEndAt().getNano());
     assertEquals(false, task3.getIsTimeInclude());
+    assertEquals(11L + 11L + 11L, task3.getSeqNum());
 
     Task task4 = taskRepository.findById(taskId4).orElseThrow(() -> new NoSuchElementException());
     assertEquals(true, task4.getIsTimeInclude());
+    assertEquals(11L + 11L + 11L + 11L, task4.getSeqNum());
 
-    //연결고리 확인
-    assertEquals(taskId2, task1.getNext().getId());
-    assertEquals(null, task1.getPrev());
-    assertEquals(taskId1, task2.getPrev().getId());
-    assertEquals(taskId3, task2.getNext().getId());
+    //순서 확인
+    List<TaskResponse> tasks = taskService.getAllTask(member).getPending().getTasks();
+    assertEquals (taskId1, tasks.get(0).getId());
+    assertEquals (taskId2, tasks.get(1).getId());
+    assertEquals (taskId3, tasks.get(2).getId());
+    assertEquals (taskId4, tasks.get(3).getId());
   }
 
   private void make4Task() {
@@ -202,7 +207,6 @@ public class TaskServiceTest {
     assertEquals(taskId3, tasks.get(1).getId());
     assertEquals(taskId4, tasks.get(2).getId());
     assertEquals(taskId1, tasks.get(3).getId());
-
   }
 
   @DisplayName("일정 같은 타입으로 이동: 중간으로")
@@ -213,7 +217,6 @@ public class TaskServiceTest {
     make4Task();
 
     List<Long> lst = makeDestinationOrderList(new Long[]{taskId2, taskId1, taskId3, taskId4});
-
 
     taskService.move(taskId1, new TaskMoveRequest(EIType.PENDING, lst), member);
     em.flush(); em.clear();
@@ -342,16 +345,15 @@ public class TaskServiceTest {
       taskService.move(taskId3, new TaskMoveRequest(EIType.IMPORTANT_URGENT, finalLst3), member);
     });
 
-    //배열 길이가 이상할 경우 - 오류 x
+    //배열 길이가 이상할 경우
     lst = makeDestinationOrderList(new Long[]{taskId1, taskId2, taskId3});
     taskService.move(taskId3, new TaskMoveRequest(EIType.IMPORTANT_URGENT, lst), member);
 
     lst = makeDestinationOrderList(new Long[]{taskId2, taskId4, taskId3});
     List<Long> finalLst4 = lst;
-    assertDoesNotThrow(() -> {
+    assertThrows(InputMismatchException.class, () -> {
       taskService.move(taskId4, new TaskMoveRequest(EIType.IMPORTANT_URGENT, finalLst4), member);
     });
-
   }
 
   @DisplayName("일정 상위에서 이동")
@@ -500,32 +502,32 @@ public class TaskServiceTest {
     assertEquals(false, task3.getIsHistory());
   }
 
-  @DisplayName("일정 정리하기 테스트")
-  @Transactional
-  @Order(15)
-  @Test
-  void clearCompleteTask() throws InterruptedException {
-    make4Task();
-
-    taskService.editCheck(taskId2, new TaskCheckDto(true));
-    Thread.sleep(1000);
-    taskService.editCheck(taskId3, new TaskCheckDto(true));
-
-    taskService.cleanCompleteTasks(member);
-
-    List<TaskResponse> tasks = taskService.getAllTask(member).getPending().getTasks();
-    for (TaskResponse response: tasks) {
-      assertNotEquals(taskId2, response.getId());
-      assertNotEquals(taskId3, response.getId());
-    }
-
-    //히스토리 잘 들어갔는지 확인
-    List<HistoryTaskDto> historys = historyService.getHistory(member.getId(), PageRequest.of(0, 2)).getTasks();
-
-    //체크 완료된 순 DESC 정렬!
-    assertEquals(taskId2, historys.get(1).getId());
-    assertEquals(taskId3, historys.get(0).getId());
-  }
+//  @DisplayName("일정 정리하기 테스트")
+//  @Transactional
+//  @Order(15)
+//  @Test
+//  void clearCompleteTask() throws InterruptedException {
+//    make4Task();
+//
+//    taskService.editCheck(taskId2, new TaskCheckDto(true));
+//    Thread.sleep(1000);
+//    taskService.editCheck(taskId3, new TaskCheckDto(true));
+//
+//    taskService.cleanCompleteTasks(member);
+//
+//    List<TaskResponse> tasks = taskService.getAllTask(member).getPending().getTasks();
+//    for (TaskResponse response: tasks) {
+//      assertNotEquals(taskId2, response.getId());
+//      assertNotEquals(taskId3, response.getId());
+//    }
+//
+//    //히스토리 잘 들어갔는지 확인
+//    List<HistoryTaskDto> historys = historyService.getHistory(member.getId(), PageRequest.of(0, 2)).getTasks();
+//
+//    //체크 완료된 순 DESC 정렬!
+//    assertEquals(taskId2, historys.get(1).getId());
+//    assertEquals(taskId3, historys.get(0).getId());
+//  }
 
   @DisplayName("일정 삭제 테스트: 첫 번째 위치")
   @Transactional

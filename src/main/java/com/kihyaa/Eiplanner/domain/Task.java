@@ -78,6 +78,10 @@ public class Task {
         this.eiType = eiType;
     }
 
+    public void setSeqNum(Long seqNum) {
+        this.seqNum = seqNum;
+    }
+
     public void edit(String title, String description, LocalDateTime endAt, boolean isTimeInclude) {
         this.title = title;
         this.description = description;

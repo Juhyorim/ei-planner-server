@@ -28,17 +28,17 @@ public class TaskController {
     return ResponseEntity.ok(taskService.makeTask(request, member));
   }
 
-//  //일정 타입, 위치 옮기기
-//  @PutMapping("/{task_id}/move")
-//  public ResponseEntity moveTask(@PathVariable("task_id")Long taskId, @RequestBody TaskMoveRequest taskList, @CurrentMember Member member) {
-//    boolean move = taskService.move(taskId, taskList, member);
-//
-//    if (move)
-//      return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
-//    else
-//      return ApiResponse.createResponse(MessageCode.SUCCESS_BUT_NOTHING_HAPPENDED, HttpStatus.OK);
-//  }
-//
+  //일정 타입, 위치 옮기기
+  @PutMapping("/{task_id}/move")
+  public ResponseEntity moveTask(@PathVariable("task_id")Long taskId, @RequestBody TaskMoveRequest taskList, @CurrentMember Member member) {
+    boolean move = taskService.move(taskId, taskList, member);
+
+    if (move)
+      return ApiResponse.createResponse(MessageCode.SUCCESS_UPDATE_RESOURCE, HttpStatus.OK);
+    else
+      return ApiResponse.createResponse(MessageCode.SUCCESS_BUT_NOTHING_HAPPENDED, HttpStatus.OK);
+  }
+
   //일정 삭제
   @DeleteMapping("/{task_id}")
   public ResponseEntity deleteTask(@PathVariable("task_id") Long taskId, @CurrentMember Member member) {
